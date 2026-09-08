@@ -1,18 +1,19 @@
 name: Publish app image
 
 on:
-  push:
-    branches:
-      - release-1.5.1-conventions
-    paths:
-      - '.github/workflows/publish.yml'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: App version to publish (for example 1.5.1)
+        required: true
+        type: string
 
 permissions: {}
 
 env:
   ARCHITECTURES: '["amd64", "aarch64"]'
   IMAGE_NAME: ha-nextexplorer
-  VERSION: '1.5.1'
+  VERSION: ${{ inputs.version }}
 
 jobs:
   validate-version:
@@ -23,13 +24,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Validate version
+      - name: Validate version input
         shell: bash
         run: |
           set -euo pipefail
-          config_version=$(awk -F'"' '/^version:/ {print $2}' nextexplorer/config.yaml)
-          if [[ "${VERSION}" != "${config_version}" ]]; then
-            echo "::error::Release version ${VERSION} does not match config.yaml ${config_version}"
+          if [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::Invalid version: ${VERSION}"
             exit 1
           fi
 
