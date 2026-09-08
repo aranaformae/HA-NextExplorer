@@ -1,0 +1,81 @@
+#include <tunables/global>
+
+profile nextexplorer_ingress flags=(attach_disconnected,mediate_deleted) {
+  #include <abstractions/base>
+
+  # The parent profile is used by S6/basher startup scripts. File access here
+  # remains bounded by the Docker mounts configured by Home Assistant.
+  file,
+  signal (send) set=(kill,term,int,hup,cont),
+
+  # S6 Overlay / Home Assistant base image
+  /init ix,
+  /bin/** ix,
+  /usr/bin/** ix,
+  /run/{s6,s6-rc*,service}/** ix,
+  /package/** ix,
+  /command/** ix,
+  /etc/s6/** rix,
+  /etc/services.d/** rwix,
+  /etc/cont-init.d/** rwix,
+  /etc/cont-finish.d/** rwix,
+  /run/{,**} rwk,
+
+  # Bashio and temporary startup files
+  /usr/lib/bashio/** ix,
+  /tmp/** rwk,
+  /data/** rwk,
+
+  # Start NextExplorer in a separate, restricted service profile.
+  /usr/bin/node cx -> nextexplorer-node,
+
+  profile nextexplorer-node flags=(attach_disconnected,mediate_deleted) {
+    #include <abstractions/base>
+    #include <abstractions/nameservice>
+
+    # Ingress HTTP/WebSocket traffic and outbound connections used by
+    # NextExplorer functionality.
+    network inet,
+    network inet6,
+    network unix,
+
+    # S6 may stop/restart the Node.js service.
+    signal (receive) peer=*_nextexplorer_ingress,
+    signal (send) set=(kill,term,int,hup,cont),
+
+    # Application and helper binaries. Helpers inherit this restricted profile.
+    /usr/bin/node rm,
+    /app/** r,
+    /bin/** rix,
+    /usr/bin/** rix,
+    /usr/sbin/** rix,
+    /usr/lib/** mr,
+    /usr/share/** r,
+    /lib/** mr,
+    /etc/** r,
+
+    # NextExplorer persistent state, cache and temporary work files.
+    /data/** rwk,
+    /config/** rwkl,
+    /cache/** rwk,
+    /storage/** rwkl,
+    /tmp/** rwk,
+
+    # Home Assistant directories explicitly mapped in config.yaml.
+    /homeassistant/** rwkl,
+    /share/** rwkl,
+    /media/** rwkl,
+    /backup/** rwkl,
+    /addon_configs/** rwkl,
+    /addons/** rwkl,
+    /ssl/** rwkl,
+
+    # Basic process/system information required by Node.js and helper tools.
+    /proc/** r,
+    /sys/devices/** r,
+    /dev/null rw,
+    /dev/zero rw,
+    /dev/random r,
+    /dev/urandom r,
+  }
+}
