@@ -4,6 +4,36 @@ All notable user-visible changes to the Home Assistant NextExplorer App are docu
 
 The Home Assistant App version is independent from the bundled NextExplorer upstream version.
 
+## [1.5.0] - 2026-09-08
+
+### Added
+
+- Added prebuilt GHCR images for `amd64` and `aarch64`.
+- Added a signed multi-architecture manifest at `ghcr.io/aranaformae/ha-nextexplorer`.
+- Added a dedicated publish workflow using the current Home Assistant builder actions.
+- Added Home Assistant App metadata labels to the published images.
+
+### Changed
+
+- Home Assistant now downloads a prebuilt image instead of compiling NextExplorer locally during installation or updates.
+- Migrated the Docker build to the current multi-platform `ghcr.io/home-assistant/base` image.
+- Removed the legacy `build.yaml` file, following the current Home Assistant App build recommendations.
+- App configuration now references the generic multi-arch image name instead of an architecture-specific build path.
+- Runtime build marker updated to `NEXTEXPLORER HA INGRESS BUILD: 1.5.0`.
+
+### Benefits
+
+- Faster Home Assistant App installs and updates.
+- Reproducible images: all users receive the exact image that passed CI.
+- Native `amd64` and `aarch64` builds instead of relying on local Supervisor compilation.
+- Published images and the multi-arch manifest are signed by the GitHub Actions workflow using Cosign/OIDC.
+
+### Compatibility
+
+- Bundled NextExplorer remains `v2.2.7`.
+- No configuration migration is required when upgrading from `1.4.1`.
+- Existing `root_volumes`, authentication settings and environment variables remain unchanged.
+
 ## [1.4.1] - 2026-09-08
 
 ### Added
