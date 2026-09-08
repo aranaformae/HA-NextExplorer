@@ -14,7 +14,7 @@ The goal of this project is to provide a modern file manager inside Home Assista
 - No direct CIFS/autofs mounts inside the app
 - Prebuilt signed multi-arch images for `amd64` and `aarch64`
 - Pinned and tested NextExplorer upstream version
-- CI build validation and GHCR publishing
+- CI build validation and explicit versioned GHCR publishing
 - Scheduled upstream release monitoring
 
 ## Installation
@@ -96,6 +96,8 @@ The Dockerfile uses Home Assistant's current multi-platform base image. `build.y
 
 GitHub Actions builds native `amd64` and `aarch64` images using the Home Assistant builder actions. Successful per-architecture images are pushed to GHCR and combined into the generic multi-arch manifest used by Home Assistant. The publish workflow also signs the images/manifest through Cosign with GitHub Actions OIDC.
 
+Publishing is deliberately **not** triggered by normal pushes. The `Publish app image` workflow is started manually with an explicit version input. This prevents an existing release tag from being silently replaced by a later source-code commit. Only immutable version tags are published; Home Assistant does not rely on a mutable `latest` tag.
+
 This means every installed `1.5.0` image comes from the same reproducible artifact that passed the repository build pipeline.
 
 ## Updating
@@ -117,11 +119,14 @@ The image is published before `config.yaml` is switched to a new app version. Th
 
 For a new release:
 
-1. Review and update the pinned NextExplorer version and patches.
-2. Set the target image version in the publish workflow.
-3. Build and publish both architectures and the multi-arch manifest.
-4. Confirm the GHCR workflow is green.
-5. Update `config.yaml`, runtime marker, documentation and changelog to the published version.
+1. Review and update the pinned NextExplorer version and the Home Assistant compatibility patches.
+2. Let the normal validation workflow build the updated source on `main` and confirm it is green.
+3. Run **Publish app image** manually from GitHub Actions and enter the intended app version, for example `1.5.1`.
+4. Confirm both native architecture builds and the signed multi-arch manifest are successful in GHCR.
+5. Update `config.yaml`, the runtime marker, documentation and `CHANGELOG.md` to exactly that already-published version.
+6. Let the final validation workflow pass before treating the release as complete.
+
+Never reuse an existing version number for changed source. Publish a new patch/minor/major version instead.
 
 ## Versioning
 
