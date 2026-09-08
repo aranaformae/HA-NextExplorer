@@ -4,6 +4,21 @@ All notable user-visible changes to the Home Assistant NextExplorer App are docu
 
 The Home Assistant App version is independent from the bundled NextExplorer upstream version.
 
+## [Unreleased]
+
+### Security
+
+- Added a custom Home Assistant `apparmor.txt` profile for `nextexplorer_ingress`.
+- NextExplorer now runs in a dedicated AppArmor child profile with explicit access to the application files, runtime state, cache, temporary files and Home Assistant folders mapped by `config.yaml`.
+- The service profile allows the network access required by Ingress and NextExplorer while avoiding host-level capabilities such as `SYS_ADMIN`.
+- Helper programs launched by NextExplorer inherit the restricted service profile.
+- Home Assistant awards a custom AppArmor profile an additional security point after installation.
+
+### Notes
+
+- The AppArmor profile is repository metadata and does not change the bundled NextExplorer version (`v2.2.7`).
+- If an AppArmor denial is encountered, inspect the Home Assistant host audit log before widening the profile. Access should be added only for a demonstrated requirement.
+
 ## [1.5.0] - 2026-09-08
 
 ### Added
