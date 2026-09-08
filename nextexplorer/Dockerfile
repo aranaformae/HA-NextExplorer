@@ -1,8 +1,4 @@
-ARG BUILD_ARCH
-ARG BUILD_FROM=ghcr.io/home-assistant/${BUILD_ARCH}-base:latest
-
-FROM $BUILD_FROM AS fetch_source
-LABEL io.hass.arch="amd64 aarch64"
+FROM ghcr.io/home-assistant/base:latest AS fetch_source
 RUN apk add --no-cache git
 WORKDIR /ne_src
 RUN git clone --depth 1 --branch v2.2.7 https://github.com/nxzai/NextExplorer .
@@ -14,7 +10,7 @@ RUN sed -i "/export default defineConfig({/a\\  base: './'," frontend/vite.confi
  && find frontend/src backend/src -type f \( -name '*.js' -o -name '*.vue' \) -exec sed -i "s#'/logo.svg'#'./logo.svg'#g" {} + \
  && sed -i "s#\.filter((entry) => entry.isDirectory())#.filter((entry) => entry.isDirectory() || entry.isSymbolicLink())#" backend/src/routes/volumes.js
 
-FROM $BUILD_FROM AS base
+FROM ghcr.io/home-assistant/base:latest AS base
 WORKDIR /app
 RUN apk add --no-cache nodejs npm bash jq
 
@@ -40,6 +36,11 @@ COPY --from=fetch_source /ne_src/frontend/ ./frontend/
 RUN npm run -w frontend build -- --sourcemap false
 
 FROM base AS runtime
+ARG BUILD_ARCH
+ARG BUILD_VERSION
+LABEL io.hass.type="app"
+LABEL io.hass.arch="${BUILD_ARCH}"
+LABEL io.hass.version="${BUILD_VERSION}"
 ENV NODE_ENV=production
 ENV CONFIG_DIR=/config
 ENV CACHE_DIR=/cache
