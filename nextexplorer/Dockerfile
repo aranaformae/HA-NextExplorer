@@ -10,7 +10,8 @@ RUN git clone --depth 1 --branch v2.2.3 https://github.com/nxzai/NextExplorer .
 RUN sed -i "/export default defineConfig({/a\\  base: './'," frontend/vite.config.js \
  && sed -i "s#const DEFAULT_API_BASE = '/';#const DEFAULT_API_BASE = '.';#" frontend/src/api/http.js \
  && sed -i "s/import { createRouter, createWebHistory } from 'vue-router';/import { createRouter, createWebHashHistory } from 'vue-router';/" frontend/src/router/index.js \
- && sed -i "s#history: createWebHistory(import.meta.env.BASE_URL),#history: createWebHashHistory(),#" frontend/src/router/index.js
+ && sed -i "s#history: createWebHistory(import.meta.env.BASE_URL),#history: createWebHashHistory(),#" frontend/src/router/index.js \
+ && find frontend/src backend/src -type f \( -name '*.js' -o -name '*.vue' \) -exec sed -i "s#'/logo.svg'#'./logo.svg'#g" {} +
 
 FROM $BUILD_FROM AS base
 WORKDIR /app
