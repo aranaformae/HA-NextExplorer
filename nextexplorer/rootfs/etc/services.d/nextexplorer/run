@@ -1,0 +1,28 @@
+#!/usr/bin/with-contenv bashio
+
+echo "============================================================"
+echo "NEXTEXPLORER HA INGRESS BUILD: 1.3.0-ingress.1"
+echo "============================================================"
+echo "Starting Next Explorer server..."
+
+export LOG_LEVEL=$(bashio::config 'log_level' 'info')
+export PUBLIC_URL=$(bashio::config 'public_url' '')
+export AUTH_MODE=$(bashio::config 'auth_mode' 'disabled')
+export TRUST_PROXY="loopback,uniquelocal"
+export USER_VOLUMES="true"
+
+echo "--- Runtime Configuration ---"
+echo "LOG_LEVEL:   $LOG_LEVEL"
+echo "AUTH_MODE:   $AUTH_MODE"
+echo "PUBLIC_URL:  $PUBLIC_URL"
+echo "----------------------------"
+
+for var in $(bashio::config 'env_vars|keys'); do
+    NAME=$(bashio::config "env_vars[${var}].name")
+    VALUE=$(bashio::config "env_vars[${var}].value")
+    export "${NAME}=${VALUE}"
+    echo "${NAME}:   ${VALUE}"
+done
+
+cd /app
+exec node /app/src/server.js
