@@ -1,5 +1,6 @@
+---
 name: Next Explorer Ingress
-version: "1.5.0"
+version: "1.5.1"
 slug: nextexplorer_ingress
 description: Next Explorer patched for native Home Assistant Ingress
 url: "https://github.com/aranaformae/HA-NextExplorer"
@@ -15,14 +16,16 @@ panel_icon: mdi:folder-open
 panel_title: Bestanden
 panel_admin: true
 map:
-  - addon_config:rw
-  - all_addon_configs:rw
-  - homeassistant_config:rw
-  - ssl:rw
-  - media:rw
-  - backup:rw
-  - addons:rw
-  - share:rw
+  - type: addon_config
+    read_only: false
+  - type: homeassistant_config
+    read_only: false
+  - type: share
+    read_only: false
+  - type: media
+    read_only: false
+  - type: backup
+    read_only: false
 options:
   public_url: ""
   root_volumes:
@@ -35,7 +38,7 @@ options:
   env_vars: []
 schema:
   root_volumes:
-    - str
+    - "match(^(homeassistant_config|share|media|backup)$)"
   log_level: list(trace|debug|info|warn|error)
   public_url: str?
   auth_mode: list(both|local|oidc|disabled)
