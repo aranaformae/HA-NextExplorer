@@ -16,6 +16,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Validate AppArmor profile
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y apparmor apparmor-utils
+          apparmor_parser -Q -K nextexplorer/apparmor.txt
+
       - name: Build app image
         run: |
           docker build \
