@@ -1,0 +1,3 @@
+#!/usr/bin/with-contenv bashio
+bashio::log.info "Starting Autofs daemon..."
+exec automount -f --verbose
