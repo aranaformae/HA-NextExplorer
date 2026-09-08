@@ -81,6 +81,18 @@ The app uses the generic multi-architecture image:
 
 GitHub Actions builds native `amd64` and `aarch64` variants and combines them into one manifest. The published image is signed during the workflow.
 
+## Security
+
+NextExplorer has read/write access to the folders you enable. In particular, changes to `homeassistant_config` can affect whether Home Assistant starts correctly, and files in `backup` can be deleted. Treat the app as an administrator tool.
+
+The app does not require `SYS_ADMIN`, direct CIFS mounts, autofs, host networking or Docker API access.
+
+A custom `apparmor.txt` profile is included. Startup scripts run in the app profile and the Node.js NextExplorer service transitions into a dedicated restricted child profile. That service profile explicitly allows the app/runtime paths, temporary/cache locations and the Home Assistant directories mapped in `config.yaml`, plus the network access required for Ingress and normal NextExplorer operation.
+
+Home Assistant grants an additional security-rating point to installed apps that provide a custom AppArmor profile.
+
+If NextExplorer stops working after a future feature or upstream update and the logs indicate an AppArmor denial, do not disable AppArmor as a first fix. Inspect the Home Assistant host audit log and add only the specific access that the demonstrated feature requires.
+
 ## Troubleshooting
 
 For app version 1.5.0, the startup log should include:
@@ -95,11 +107,7 @@ If the interface opens but a volume is missing, check `root_volumes` in the app 
 
 If network storage is missing, first verify that Home Assistant itself can see the network storage under **Settings → System → Storage**.
 
-## Security
-
-NextExplorer has read/write access to the folders you enable. In particular, changes to `homeassistant_config` can affect whether Home Assistant starts correctly, and files in `backup` can be deleted.
-
-The app therefore should be treated as an administrator tool. The current build does not require `SYS_ADMIN`, direct CIFS mounts or autofs.
+If the app fails to start after an AppArmor change, inspect the host audit log for AppArmor `DENIED` entries. The repository CI validates the AppArmor policy syntax, but only a running Home Assistant system can exercise every runtime access path.
 
 ## Updates
 
