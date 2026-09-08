@@ -12,8 +12,9 @@ The goal of this project is to provide a modern file manager inside Home Assista
 - NextExplorer editor, previews, thumbnails and search
 - No `SYS_ADMIN` capability
 - No direct CIFS/autofs mounts inside the app
+- Prebuilt signed multi-arch images for `amd64` and `aarch64`
 - Pinned and tested NextExplorer upstream version
-- CI build validation
+- CI build validation and GHCR publishing
 - Scheduled upstream release monitoring
 
 ## Installation
@@ -29,6 +30,12 @@ The goal of this project is to provide a modern file manager inside Home Assista
 6. Enable **Show in sidebar** if Home Assistant has not already added it.
 
 No host port is exposed. The web interface is served through Home Assistant Ingress.
+
+From app version `1.5.0`, Home Assistant downloads the prebuilt multi-architecture image from:
+
+`ghcr.io/aranaformae/ha-nextexplorer`
+
+Home Assistant therefore no longer needs to compile NextExplorer locally during installation or updates.
 
 ## Default configuration
 
@@ -83,11 +90,19 @@ Upstream NextExplorer is designed to run at a normal web root. Home Assistant In
 
 The upstream source itself is not vendored into this repository. A specific release tag is cloned during the build and patched reproducibly.
 
+## Build and publishing
+
+The Dockerfile uses Home Assistant's current multi-platform base image. `build.yaml` is intentionally not used.
+
+GitHub Actions builds native `amd64` and `aarch64` images using the Home Assistant builder actions. Successful per-architecture images are pushed to GHCR and combined into the generic multi-arch manifest used by Home Assistant. The publish workflow also signs the images/manifest through Cosign with GitHub Actions OIDC.
+
+This means every installed `1.5.0` image comes from the same reproducible artifact that passed the repository build pipeline.
+
 ## Updating
 
 NextExplorer is deliberately pinned to a known upstream release. This prevents an upstream frontend or routing change from silently breaking Home Assistant Ingress.
 
-GitHub Actions performs a build validation for repository changes. A scheduled workflow also checks for newer NextExplorer releases. Upstream releases are reviewed before changing the pin and publishing a new app version.
+A scheduled workflow checks for newer upstream releases. New versions are reviewed against the Ingress patch before a new app image and app version are published.
 
 After an app update, verify that the following volumes open correctly before relying on the new version:
 
@@ -96,17 +111,29 @@ After an app update, verify that the following volumes open correctly before rel
 - `media`
 - `backup`
 
+## Release process
+
+The image is published before `config.yaml` is switched to a new app version. This prevents Home Assistant from offering an update whose registry image does not exist yet.
+
+For a new release:
+
+1. Review and update the pinned NextExplorer version and patches.
+2. Set the target image version in the publish workflow.
+3. Build and publish both architectures and the multi-arch manifest.
+4. Confirm the GHCR workflow is green.
+5. Update `config.yaml`, runtime marker, documentation and changelog to the published version.
+
 ## Versioning
 
-The Home Assistant App uses its own version number, separate from the bundled NextExplorer version. For example, app `1.4.1` currently packages NextExplorer `v2.2.7` plus the Home Assistant-specific integration patches.
+The Home Assistant App uses its own version number, separate from the bundled NextExplorer version. App `1.5.0` packages NextExplorer `v2.2.7` plus the Home Assistant-specific integration patches and uses prebuilt GHCR distribution.
 
 See [CHANGELOG.md](CHANGELOG.md) for user-visible changes.
 
 ## Troubleshooting
 
-If the app opens but the interface does not load correctly, first inspect the app log. A current 1.4.1 installation should contain:
+If the app opens but the interface does not load correctly, first inspect the app log. A current 1.5.0 installation should contain:
 
-`NEXTEXPLORER HA INGRESS BUILD: 1.4.1`
+`NEXTEXPLORER HA INGRESS BUILD: 1.5.0`
 
 and normally:
 
