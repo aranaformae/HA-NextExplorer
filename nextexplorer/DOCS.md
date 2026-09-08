@@ -1,118 +1,88 @@
 # Next Explorer Ingress
 
-NextExplorer is a modern web-based file manager. This Home Assistant App packages it for native Home Assistant Ingress so you can manage files directly from the Home Assistant sidebar.
+NextExplorer is a modern web-based file manager packaged as a Home Assistant App with native Ingress support.
 
 ## Installation
 
-Install the app, start it and open **Web UI**. You can also enable **Show in sidebar** for quick access.
+Install the app, start it and open **Web UI**. You can also enable **Show in sidebar** for quick access. No separate web port or reverse proxy is required.
 
-No separate web port or reverse proxy is required.
-
-From version `1.5.0`, Home Assistant downloads a prebuilt multi-architecture image from GHCR instead of compiling NextExplorer locally. This makes installation and updates faster and ensures all users receive the same CI-built image.
+Home Assistant downloads the prebuilt multi-architecture image from GHCR; it does not compile NextExplorer locally.
 
 ## Available folders
 
 By default NextExplorer can access:
 
-- **homeassistant_config** — your Home Assistant configuration files
+- **homeassistant_config** — Home Assistant configuration files
 - **shared** — Home Assistant share storage
 - **media** — Home Assistant media storage
 - **backup** — Home Assistant backup storage
 
 These locations are writable. Changes made in NextExplorer affect the real Home Assistant files.
 
+For security, the app no longer exposes `all_addon_configs`, `addons`, or `ssl`. The configuration schema only accepts the four supported root volumes listed above.
+
 ## Network storage
 
-For a NAS or other SMB/NFS server, first add the network location to Home Assistant:
+For a NAS or other SMB/NFS server, first add the network location to Home Assistant under **Settings → System → Storage → Add network storage**. Choose **Share** or **Media** as appropriate. NextExplorer can then browse the mounted data through its `shared` or `media` volume.
 
-**Settings → System → Storage → Add network storage**
-
-Choose **Share** or **Media** as appropriate. NextExplorer can then browse the mounted data through its `shared` or `media` volume.
-
-Network shares are intentionally not mounted directly by this app. This keeps network credentials in Home Assistant and allows the app to run without Linux mount privileges.
+Network shares are intentionally not mounted directly by this app. This keeps network credentials and mount lifecycle in Home Assistant and avoids unnecessary container privileges.
 
 ## Authentication
 
-The default authentication mode is `disabled` because Home Assistant Ingress protects access to the app.
-
-Keep the app behind Home Assistant Ingress when using this mode. The internal NextExplorer service is not intended to be exposed directly.
+The default authentication mode is `disabled` because Home Assistant Ingress protects access to the app. Keep the app behind Home Assistant Ingress when using this mode.
 
 ## Configuration
 
+The Home Assistant UI includes English and Dutch labels and descriptions through `translations/en.yaml` and `translations/nl.yaml`.
+
 ### `root_volumes`
 
-Controls which Home Assistant storage locations are presented in NextExplorer.
-
-Default:
-
-```yaml
-root_volumes:
-  - homeassistant_config
-  - share
-  - media
-  - backup
-```
+Selects which supported Home Assistant storage locations are presented in NextExplorer. Allowed values are `homeassistant_config`, `share`, `media`, and `backup`.
 
 ### `auth_mode`
 
-Available values are `disabled`, `local`, `oidc` and `both`.
-
-For normal Home Assistant Ingress use, `disabled` is recommended because Home Assistant already performs authentication.
+Available values are `disabled`, `local`, `oidc`, and `both`. For normal Home Assistant Ingress use, `disabled` is recommended.
 
 ### `log_level`
 
-Available values: `trace`, `debug`, `info`, `warn`, `error`.
-
-Use `info` normally. Switch temporarily to `debug` when troubleshooting.
+Available values are `trace`, `debug`, `info`, `warn`, and `error`. Use `info` normally.
 
 ### `public_url`
 
-Normally leave this empty for Ingress use. It exists for NextExplorer compatibility and advanced configurations.
+Normally leave this empty for Ingress use. It exists for advanced NextExplorer configurations.
 
 ### `env_vars`
 
-Allows advanced NextExplorer environment variables to be supplied. Only use this when you understand the corresponding upstream NextExplorer setting.
+Allows advanced NextExplorer environment variables. Values are passed to the application but are deliberately redacted from the startup log.
 
 ## Image distribution
 
-The app uses the generic multi-architecture image:
-
-`ghcr.io/aranaformae/ha-nextexplorer`
-
-GitHub Actions builds native `amd64` and `aarch64` variants and combines them into one manifest. The published image is signed during the workflow.
+The app uses the generic multi-architecture image `ghcr.io/aranaformae/ha-nextexplorer`. GitHub Actions builds native `amd64` and `aarch64` variants, combines them into a multi-arch manifest and signs the published artifacts.
 
 ## Security
 
-NextExplorer has read/write access to the folders you enable. In particular, changes to `homeassistant_config` can affect whether Home Assistant starts correctly, and files in `backup` can be deleted. Treat the app as an administrator tool.
+NextExplorer has read/write access to the folders you enable, so treat the app as an administrator tool.
 
-The app does not require `SYS_ADMIN`, direct CIFS mounts, autofs, host networking or Docker API access.
+The app does not require `SYS_ADMIN`, host networking, Docker API access, direct CIFS mounts, autofs or privileged bind mounts. The Home Assistant `map:` configuration uses the current object syntax and requests only the directories actually needed by the app.
 
-A custom `apparmor.txt` profile is included. Startup scripts run in the app profile and the Node.js NextExplorer service transitions into a dedicated restricted child profile. That service profile explicitly allows the app/runtime paths, temporary/cache locations and the Home Assistant directories mapped in `config.yaml`, plus the network access required for Ingress and normal NextExplorer operation.
+A custom `apparmor.txt` profile is included. The Node.js service runs in a restricted child profile with access to the application/runtime paths, cache/temp locations, network traffic required by Ingress and only the Home Assistant directories mapped by `config.yaml`.
 
-Home Assistant grants an additional security-rating point to installed apps that provide a custom AppArmor profile.
-
-If NextExplorer stops working after a future feature or upstream update and the logs indicate an AppArmor denial, do not disable AppArmor as a first fix. Inspect the Home Assistant host audit log and add only the specific access that the demonstrated feature requires.
+CI validates the AppArmor policy with `apparmor_parser` before building the image.
 
 ## Troubleshooting
 
-For app version 1.5.0, the startup log should include:
+For app version 1.5.1, the startup log should include:
 
-`NEXTEXPLORER HA INGRESS BUILD: 1.5.0`
+`NEXTEXPLORER HA INGRESS BUILD: 1.5.1`
 
-With the default configuration it should also show:
+With the default configuration it should also show `AUTH_MODE: disabled`.
 
-`AUTH_MODE: disabled`
+If the interface opens but a volume is missing, check `root_volumes` and restart the app. If network storage is missing, verify that Home Assistant itself can see the network storage under **Settings → System → Storage**.
 
-If the interface opens but a volume is missing, check `root_volumes` in the app configuration and restart the app.
-
-If network storage is missing, first verify that Home Assistant itself can see the network storage under **Settings → System → Storage**.
-
-If the app fails to start after an AppArmor change, inspect the host audit log for AppArmor `DENIED` entries. The repository CI validates the AppArmor policy syntax, but only a running Home Assistant system can exercise every runtime access path.
+If the app fails to start after an AppArmor change, inspect the Home Assistant host audit log for AppArmor `DENIED` entries rather than disabling AppArmor.
 
 ## Updates
 
-This app pins a tested NextExplorer release instead of automatically following upstream `latest`. This is necessary because Home Assistant Ingress requires a small compatibility patch to NextExplorer's frontend routing and asset handling.
+NextExplorer is pinned to a tested upstream release instead of following `latest`. New app versions are published only after compatibility patches, CI validation and both architecture images have been verified.
 
-The project automatically checks for newer upstream releases. A new Home Assistant App version is only published after both architecture images and the multi-arch GHCR manifest have built successfully.
-
-See the project changelog for detailed release notes.
+See the changelog for detailed release notes and migration information.
