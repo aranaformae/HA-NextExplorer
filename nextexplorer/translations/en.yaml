@@ -1,0 +1,36 @@
+---
+configuration:
+  root_volumes:
+    name: Available folders
+    description: >-
+      Select which Home Assistant folders NextExplorer can access. Supported
+      values are homeassistant_config, share, media, and backup. All selected
+      folders are writable.
+  log_level:
+    name: Log level
+    description: >-
+      Controls NextExplorer logging verbosity. Use info for normal operation
+      and debug only while troubleshooting.
+  public_url:
+    name: Public URL
+    description: >-
+      Optional public URL used by advanced NextExplorer configurations. Leave
+      empty when using Home Assistant Ingress normally.
+  auth_mode:
+    name: Authentication mode
+    description: >-
+      Controls NextExplorer's own authentication. Disabled is recommended for
+      normal Home Assistant Ingress use because Home Assistant already
+      authenticates access to the app.
+  env_vars:
+    name: Additional environment variables
+    description: >-
+      Advanced NextExplorer environment variables. Values are passed to the
+      application but are redacted from the app startup log.
+    fields:
+      name:
+        name: Variable name
+        description: Environment variable name.
+      value:
+        name: Variable value
+        description: Environment variable value.

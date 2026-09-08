@@ -3,7 +3,7 @@
 profile nextexplorer_ingress flags=(attach_disconnected,mediate_deleted) {
   #include <abstractions/base>
 
-  # The parent profile is used by S6/basher startup scripts. File access here
+  # The parent profile is used by S6/bash startup scripts. File access here
   # remains bounded by the Docker mounts configured by Home Assistant.
   file,
   signal (send) set=(kill,term,int,hup,cont),
@@ -61,14 +61,11 @@ profile nextexplorer_ingress flags=(attach_disconnected,mediate_deleted) {
     /storage/** rwkl,
     /tmp/** rwk,
 
-    # Home Assistant directories explicitly mapped in config.yaml.
+    # Only the Home Assistant directories mapped in config.yaml.
     /homeassistant/** rwkl,
     /share/** rwkl,
     /media/** rwkl,
     /backup/** rwkl,
-    /addon_configs/** rwkl,
-    /addons/** rwkl,
-    /ssl/** rwkl,
 
     # Basic process/system information required by Node.js and helper tools.
     /proc/** r,

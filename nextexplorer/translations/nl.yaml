@@ -1,0 +1,36 @@
+---
+configuration:
+  root_volumes:
+    name: Beschikbare mappen
+    description: >-
+      Selecteer tot welke Home Assistant-mappen NextExplorer toegang krijgt.
+      Ondersteunde waarden zijn homeassistant_config, share, media en backup.
+      Alle geselecteerde mappen zijn beschrijfbaar.
+  log_level:
+    name: Logniveau
+    description: >-
+      Bepaalt hoeveel informatie NextExplorer logt. Gebruik info voor normaal
+      gebruik en debug alleen tijdens probleemoplossing.
+  public_url:
+    name: Publieke URL
+    description: >-
+      Optionele publieke URL voor geavanceerde NextExplorer-configuraties.
+      Laat dit leeg bij normaal gebruik via Home Assistant Ingress.
+  auth_mode:
+    name: Authenticatiemodus
+    description: >-
+      Bepaalt de eigen authenticatie van NextExplorer. Disabled wordt
+      aanbevolen bij normaal gebruik via Home Assistant Ingress, omdat Home
+      Assistant de toegang tot de app al beveiligt.
+  env_vars:
+    name: Extra omgevingsvariabelen
+    description: >-
+      Geavanceerde omgevingsvariabelen voor NextExplorer. De waarden worden
+      aan de applicatie doorgegeven, maar in het opstartlog afgeschermd.
+    fields:
+      name:
+        name: Variabelenaam
+        description: Naam van de omgevingsvariabele.
+      value:
+        name: Variabelewaarde
+        description: Waarde van de omgevingsvariabele.

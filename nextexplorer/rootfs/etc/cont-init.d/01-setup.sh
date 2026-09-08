@@ -25,18 +25,6 @@ if jq -e '.root_volumes and (.root_volumes | length > 0)' "$OPTIONS_FILE" > /dev
                 SOURCE_PATH="/backup"
                 TARGET_NAME="backup"
                 ;;
-            all_addon_configs)
-                SOURCE_PATH="/addon_configs"
-                TARGET_NAME="addon_configs"
-                ;;
-            addons)
-                SOURCE_PATH="/addons"
-                TARGET_NAME="addons"
-                ;;
-            ssl)
-                SOURCE_PATH="/ssl"
-                TARGET_NAME="ssl"
-                ;;
             *)
                 echo "WARNING: unsupported root volume requested: $vol"
                 continue
@@ -46,8 +34,14 @@ if jq -e '.root_volumes and (.root_volumes | length > 0)' "$OPTIONS_FILE" > /dev
         TARGET_PATH="$V_ROOT/$TARGET_NAME"
         echo "$SOURCE_PATH -> $TARGET_PATH"
 
+        if [ -L "$TARGET_PATH" ]; then
+            rm -f "$TARGET_PATH"
+        elif [ -e "$TARGET_PATH" ]; then
+            echo "ERROR: refusing to replace non-symlink path: $TARGET_PATH"
+            continue
+        fi
+
         if [ -d "$SOURCE_PATH" ]; then
-            rm -rf "$TARGET_PATH"
             ln -s "$SOURCE_PATH" "$TARGET_PATH"
         else
             echo "WARNING: source volume does not exist: $SOURCE_PATH"
