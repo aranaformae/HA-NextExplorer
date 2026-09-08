@@ -1,0 +1,49 @@
+name: Check upstream NextExplorer release
+
+on:
+  schedule:
+    - cron: '17 7 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Compare pinned and latest versions
+        id: versions
+        shell: bash
+        run: |
+          set -euo pipefail
+          pinned=$(grep -oE -- '--branch v[0-9]+\.[0-9]+\.[0-9]+' nextexplorer/Dockerfile | awk '{print $2}' | head -n1)
+          latest=$(curl -fsSL https://api.github.com/repos/nxzai/NextExplorer/releases/latest | jq -r '.tag_name')
+          echo "pinned=$pinned" >> "$GITHUB_OUTPUT"
+          echo "latest=$latest" >> "$GITHUB_OUTPUT"
+          if [ "$pinned" != "$latest" ]; then
+            echo "update_available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "update_available=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "Pinned: $pinned"
+          echo "Latest: $latest"
+
+      - name: Open update issue if needed
+        if: steps.versions.outputs.update_available == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PINNED: ${{ steps.versions.outputs.pinned }}
+          LATEST: ${{ steps.versions.outputs.latest }}
+        run: |
+          title="Update NextExplorer to ${LATEST}"
+          existing=$(gh issue list --state open --search "$title in:title" --json number --jq 'length')
+          if [ "$existing" -eq 0 ]; then
+            gh issue create \
+              --title "$title" \
+              --body "Upstream NextExplorer has a newer release.\n\nPinned: **${PINNED}**\nLatest: **${LATEST}**\n\nReview the Ingress patches and CI build before updating the pin."
+          fi
