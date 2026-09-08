@@ -5,7 +5,7 @@ FROM $BUILD_FROM AS fetch_source
 LABEL io.hass.arch="amd64 aarch64"
 RUN apk add --no-cache git
 WORKDIR /ne_src
-RUN git clone --depth 1 --branch v2.2.3 https://github.com/nxzai/NextExplorer .
+RUN git clone --depth 1 --branch v2.2.7 https://github.com/nxzai/NextExplorer .
 
 RUN sed -i "/export default defineConfig({/a\\  base: './'," frontend/vite.config.js \
  && sed -i "s#const DEFAULT_API_BASE = '/';#const DEFAULT_API_BASE = '.';#" frontend/src/api/http.js \
