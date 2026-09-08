@@ -8,6 +8,8 @@ Install the app, start it and open **Web UI**. You can also enable **Show in sid
 
 No separate web port or reverse proxy is required.
 
+From version `1.5.0`, Home Assistant downloads a prebuilt multi-architecture image from GHCR instead of compiling NextExplorer locally. This makes installation and updates faster and ensures all users receive the same CI-built image.
+
 ## Available folders
 
 By default NextExplorer can access:
@@ -71,11 +73,19 @@ Normally leave this empty for Ingress use. It exists for NextExplorer compatibil
 
 Allows advanced NextExplorer environment variables to be supplied. Only use this when you understand the corresponding upstream NextExplorer setting.
 
+## Image distribution
+
+The app uses the generic multi-architecture image:
+
+`ghcr.io/aranaformae/ha-nextexplorer`
+
+GitHub Actions builds native `amd64` and `aarch64` variants and combines them into one manifest. The published image is signed during the workflow.
+
 ## Troubleshooting
 
-For app version 1.4.1, the startup log should include:
+For app version 1.5.0, the startup log should include:
 
-`NEXTEXPLORER HA INGRESS BUILD: 1.4.1`
+`NEXTEXPLORER HA INGRESS BUILD: 1.5.0`
 
 With the default configuration it should also show:
 
@@ -89,12 +99,12 @@ If network storage is missing, first verify that Home Assistant itself can see t
 
 NextExplorer has read/write access to the folders you enable. In particular, changes to `homeassistant_config` can affect whether Home Assistant starts correctly, and files in `backup` can be deleted.
 
-The app therefore should be treated as an administrator tool. Version 1.4.x no longer requires `SYS_ADMIN`, direct CIFS mounts or autofs.
+The app therefore should be treated as an administrator tool. The current build does not require `SYS_ADMIN`, direct CIFS mounts or autofs.
 
 ## Updates
 
 This app pins a tested NextExplorer release instead of automatically following upstream `latest`. This is necessary because Home Assistant Ingress requires a small compatibility patch to NextExplorer's frontend routing and asset handling.
 
-The project automatically checks for newer upstream releases, after which the compatibility changes can be reviewed and tested before an app update is published.
+The project automatically checks for newer upstream releases. A new Home Assistant App version is only published after both architecture images and the multi-arch GHCR manifest have built successfully.
 
 See the project changelog for detailed release notes.
