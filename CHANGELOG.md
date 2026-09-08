@@ -4,20 +4,34 @@ All notable user-visible changes to the Home Assistant NextExplorer App are docu
 
 The Home Assistant App version is independent from the bundled NextExplorer upstream version.
 
-## [Unreleased]
+## [1.5.1] - 2026-09-08
+
+### Added
+
+- Added a custom Home Assistant `apparmor.txt` profile with a restricted child profile for the NextExplorer Node.js service.
+- Added `translations/en.yaml` and `translations/nl.yaml` for configuration labels and descriptions in the Home Assistant UI.
+- Added Home Assistant App Store `icon.png` (128x128) and `logo.png` (250x100).
+
+### Changed
+
+- Migrated `map:` entries to Home Assistant's current object syntax using `type` and `read_only`.
+- Reduced Home Assistant mounts to the directories actually required by the app: `addon_config`, `homeassistant_config`, `share`, `media`, and `backup`.
+- Restricted `root_volumes` validation to `homeassistant_config`, `share`, `media`, and `backup`.
+- Updated the runtime build marker to `NEXTEXPLORER HA INGRESS BUILD: 1.5.1`.
+- Hardened symlink creation so an unexpected real path under `/storage` is never removed automatically.
 
 ### Security
 
-- Added a custom Home Assistant `apparmor.txt` profile for `nextexplorer_ingress`.
-- NextExplorer now runs in a dedicated AppArmor child profile with explicit access to the application files, runtime state, cache, temporary files and Home Assistant folders mapped by `config.yaml`.
-- The service profile allows the network access required by Ingress and NextExplorer while avoiding host-level capabilities such as `SYS_ADMIN`.
-- Helper programs launched by NextExplorer inherit the restricted service profile.
-- Home Assistant awards a custom AppArmor profile an additional security point after installation.
+- Removed unused access to `all_addon_configs`, `addons`, and `ssl` from the app configuration and AppArmor service profile.
+- Custom environment variable values are no longer written to the startup log; only the variable name and `[set]` are shown.
+- AppArmor policy syntax is validated by CI with `apparmor_parser`.
+- The app continues to avoid `SYS_ADMIN`, host networking, Docker API access, direct CIFS mounts, and privileged bind mounts.
 
-### Notes
+### Compatibility
 
-- The AppArmor profile is repository metadata and does not change the bundled NextExplorer version (`v2.2.7`).
-- If an AppArmor denial is encountered, inspect the Home Assistant host audit log before widening the profile. Access should be added only for a demonstrated requirement.
+- Bundled NextExplorer remains `v2.2.7`.
+- Existing default `root_volumes` remain unchanged.
+- Configurations that manually selected `all_addon_configs`, `addons`, or `ssl` as a root volume are no longer supported and should use the standard Home Assistant storage locations instead.
 
 ## [1.5.0] - 2026-09-08
 
