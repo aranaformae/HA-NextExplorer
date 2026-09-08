@@ -1,8 +1,9 @@
 name: Next Explorer Ingress
-version: "1.4.1"
+version: "1.5.0"
 slug: nextexplorer_ingress
 description: Next Explorer patched for native Home Assistant Ingress
 url: "https://github.com/aranaformae/HA-NextExplorer"
+image: "ghcr.io/aranaformae/ha-nextexplorer"
 arch:
   - aarch64
   - amd64
