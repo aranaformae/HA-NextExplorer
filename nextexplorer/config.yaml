@@ -1,0 +1,52 @@
+name: Next Explorer Ingress
+version: "1.3.0-ingress.1"
+slug: nextexplorer_ingress
+description: Next Explorer patched for native Home Assistant Ingress
+url: "https://github.com/aranaformae/HA-NextExplorer"
+arch:
+  - aarch64
+  - amd64
+init: false
+startup: application
+ingress: true
+ingress_port: 3000
+panel_icon: mdi:folder-open
+panel_title: Bestanden
+panel_admin: true
+map:
+  - addon_config:rw
+  - all_addon_configs:rw
+  - homeassistant_config:rw
+  - ssl:rw
+  - media:rw
+  - backup:rw
+  - addons:rw
+  - share:rw
+apparmor: false
+privileged:
+  - SYS_ADMIN
+options:
+  public_url: ""
+  root_volumes:
+    - homeassistant_config
+    - share
+    - media
+    - backup
+  auth_mode: "disabled"
+  mounts: []
+  log_level: info
+  env_vars: []
+schema:
+  root_volumes:
+    - str
+  log_level: list(trace|debug|info|warn|error)
+  public_url: str?
+  auth_mode: list(both|local|oidc|disabled)
+  mounts:
+    - server: str
+      name: str
+      username: str
+      password: password
+  env_vars:
+    - name: str
+      value: str
