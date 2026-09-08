@@ -11,12 +11,12 @@ RUN sed -i "/export default defineConfig({/a\\  base: './'," frontend/vite.confi
  && sed -i "s#const DEFAULT_API_BASE = '/';#const DEFAULT_API_BASE = '.';#" frontend/src/api/http.js \
  && sed -i "s/import { createRouter, createWebHistory } from 'vue-router';/import { createRouter, createWebHashHistory } from 'vue-router';/" frontend/src/router/index.js \
  && sed -i "s#history: createWebHistory(import.meta.env.BASE_URL),#history: createWebHashHistory(),#" frontend/src/router/index.js \
- && find frontend/src backend/src -type f \( -name '*.js' -o -name '*.vue' \) -exec sed -i "s#'/logo.svg'#'./logo.svg'#g" {} +
+ && find frontend/src backend/src -type f \( -name '*.js' -o -name '*.vue' \) -exec sed -i "s#'/logo.svg'#'./logo.svg'#g" {} + \
+ && sed -i "s#\.filter((entry) => entry.isDirectory())#.filter((entry) => entry.isDirectory() || entry.isSymbolicLink())#" backend/src/routes/volumes.js
 
 FROM $BUILD_FROM AS base
 WORKDIR /app
-RUN apk add --no-cache nodejs npm
-RUN apk add --no-cache bash jq
+RUN apk add --no-cache nodejs npm bash jq
 
 FROM base AS backend_deps
 ENV NODE_ENV=production
@@ -46,7 +46,7 @@ ENV CACHE_DIR=/cache
 ENV VOLUME_ROOT=/storage
 RUN apk add --no-cache \
       ffmpeg gosu ripgrep imagemagick openssh-client unzip bash shadow perl \
-      libva mesa-va-gallium curl autofs cifs-utils \
+      libva mesa-va-gallium curl \
   && rm -rf /tmp/* /var/cache/apk/*
 WORKDIR /app
 ARG GIT_COMMIT=""
