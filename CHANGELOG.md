@@ -4,6 +4,29 @@ All notable user-visible changes to the Home Assistant NextExplorer App are docu
 
 The Home Assistant App version is independent from the bundled NextExplorer upstream version.
 
+## [1.5.5] - 2026-09-10
+
+### Fixed
+
+- New built-in terminal sessions now start in `/storage`, the NextExplorer volume root, instead of the container home directory (`/root`).
+- This prevents the initial `ls: can't open '.': Permission denied` seen when AppArmor correctly blocks `/root`.
+
+### Security
+
+- `/root` remains intentionally inaccessible.
+- No AppArmor permissions, Linux capabilities, host access, Docker API access or Supervisor access were added for this fix.
+
+### Validation
+
+- CI now verifies that the Home Assistant build patches NextExplorer's terminal default working directory to prefer `VOLUME_ROOT`.
+- Existing AppArmor, `sqlite3`, `/storage` and real `node-pty` Bash smoke tests remain enabled.
+- Both `amd64` and `aarch64` images and the multi-architecture `1.5.5` manifest were published successfully before the app version was advanced.
+
+### Compatibility
+
+- Bundled NextExplorer remains `v2.2.7`.
+- No configuration migration is required from 1.5.4.
+
 ## [1.5.4] - 2026-09-10
 
 ### Added
