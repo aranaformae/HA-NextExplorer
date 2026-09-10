@@ -59,13 +59,18 @@ profile nextexplorer_ingress flags=(attach_disconnected,mediate_deleted) {
     /data/** rwk,
     /config/** rwkl,
     /cache/** rwk,
+    /storage/ r,
     /storage/** rwkl,
     /tmp/** rwk,
 
     # Only the Home Assistant directories mapped in config.yaml.
+    /homeassistant/ rw,
     /homeassistant/** rwkl,
+    /share/ rw,
     /share/** rwkl,
+    /media/ rw,
     /media/** rwkl,
+    /backup/ rw,
     /backup/** rwkl,
 
     # Basic process/system information required by Node.js and helper tools.
