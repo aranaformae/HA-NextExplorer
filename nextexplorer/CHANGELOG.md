@@ -4,6 +4,24 @@ All notable user-visible changes to the Home Assistant NextExplorer App are docu
 
 The Home Assistant App version is independent from the bundled NextExplorer upstream version.
 
+## [1.5.2] - 2026-09-10
+
+### Fixed
+
+- Fixed an AppArmor regression introduced in 1.5.1 that prevented native Node.js addons such as `sqlite3` from loading with `ERR_DLOPEN_FAILED: Permission denied`.
+- The restricted NextExplorer Node.js child profile now grants memory-mapping permission to application files required by native shared objects loaded through `dlopen()`.
+
+### Validation
+
+- CI now explicitly verifies the AppArmor application mapping rule.
+- CI smoke-tests the bundled `sqlite3` native module by opening and closing an in-memory database in the built image.
+- AppArmor policy syntax continues to be validated with `apparmor_parser`.
+
+### Compatibility
+
+- Bundled NextExplorer remains `v2.2.7`.
+- No configuration migration is required from 1.5.1.
+
 ## [1.5.1] - 2026-09-08
 
 ### Added

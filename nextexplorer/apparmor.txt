@@ -43,9 +43,10 @@ profile nextexplorer_ingress flags=(attach_disconnected,mediate_deleted) {
     signal (receive) peer=*_nextexplorer_ingress,
     signal (send) set=(kill,term,int,hup,cont),
 
-    # Application and helper binaries. Helpers inherit this restricted profile.
+    # Application and helper binaries. Native Node addons (*.node) are shared
+    # objects loaded through dlopen(), so application files require mmap access.
     /usr/bin/node rm,
-    /app/** r,
+    /app/** mr,
     /bin/** rix,
     /usr/bin/** rix,
     /usr/sbin/** rix,

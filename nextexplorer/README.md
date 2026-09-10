@@ -4,7 +4,7 @@ NextExplorer packaged as a Home Assistant App with native Ingress support.
 
 ## Current build
 
-- Home Assistant App: **1.5.1**
+- Home Assistant App: **1.5.2**
 - NextExplorer upstream: **v2.2.7**
 - Architectures: `amd64`, `aarch64`
 - Distribution: prebuilt signed multi-arch GHCR image
@@ -49,6 +49,8 @@ Do not expose the internal NextExplorer service directly while authentication is
 
 The app does not use `SYS_ADMIN`, host networking, Docker API access, autofs or direct CIFS mounts. A custom `apparmor.txt` profile confines the Node.js service, and CI validates the profile syntax.
 
+App version 1.5.2 fixes native Node.js addon loading under AppArmor by allowing memory mapping for application files. CI now also smoke-tests the bundled `sqlite3` native module against an in-memory database.
+
 Custom `env_vars` values are passed to NextExplorer but redacted from startup logs.
 
 ## App Store presentation
@@ -59,7 +61,7 @@ The app includes `icon.png`, `logo.png`, `DOCS.md`, `CHANGELOG.md`, and translat
 
 After startup the log should contain:
 
-`NEXTEXPLORER HA INGRESS BUILD: 1.5.1`
+`NEXTEXPLORER HA INGRESS BUILD: 1.5.2`
 
 and, with the default configuration:
 
