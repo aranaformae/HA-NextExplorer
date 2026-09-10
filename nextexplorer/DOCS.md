@@ -40,6 +40,8 @@ find /homeassistant -name "*.yaml"
 grep -R "sensor.example" /homeassistant
 ```
 
+From app **1.5.5**, new terminal sessions start in **`/storage`**, the NextExplorer volume root. This avoids opening in the container home directory (`/root`), which is intentionally inaccessible under AppArmor. As a result, `pwd` should show `/storage` and `ls` should work immediately after opening the terminal.
+
 ### Important terminal boundary
 
 The built-in terminal is **not** a Home Assistant OS host shell and is **not** a Proxmox host shell. Commands run inside the NextExplorer App container and remain confined by the app's AppArmor profile and container isolation.
@@ -48,7 +50,7 @@ The terminal can work with the Home Assistant directories explicitly mapped into
 
 Use Home Assistant's dedicated Terminal & SSH tooling when you actually need Home Assistant OS/host administration. The NextExplorer terminal is deliberately scoped to file-management tasks.
 
-The `terminal_enabled` option controls whether NextExplorer's built-in terminal backend is enabled. It is enabled by default in app 1.5.4. Disabling it removes the PTY functionality when it is not needed.
+The `terminal_enabled` option controls whether NextExplorer's built-in terminal backend is enabled. It is enabled by default. Disabling it removes the PTY functionality when it is not needed.
 
 ## Network storage
 
@@ -100,19 +102,21 @@ The app does not require `SYS_ADMIN`, host networking, Docker API access, direct
 
 A custom `apparmor.txt` profile is included. The Node.js service and the terminal shells it launches run in the restricted child profile with access to the application/runtime paths, cache/temp locations, network traffic required by Ingress and only the Home Assistant directories mapped by `config.yaml`.
 
-Native Node.js addons such as `sqlite3` are shared objects loaded through `dlopen()`. From app version 1.5.2 the AppArmor child profile grants memory-mapping permission to application files. App version 1.5.3 additionally grants explicit read/list access to `/storage/` and the mapped Home Assistant mount roots themselves so root-level volume discovery works without broadening recursive permissions. App version 1.5.4 adds only the PTY device access required by the built-in terminal; it does not turn the terminal into a host shell.
+Native Node.js addons such as `sqlite3` are shared objects loaded through `dlopen()`. From app version 1.5.2 the AppArmor child profile grants memory-mapping permission to application files. App version 1.5.3 additionally grants explicit read/list access to `/storage/` and the mapped Home Assistant mount roots themselves so root-level volume discovery works without broadening recursive permissions. App version 1.5.4 adds only the PTY device access required by the built-in terminal; it does not turn the terminal into a host shell. App version 1.5.5 changes only the terminal's default working directory to `/storage`; no additional AppArmor permissions are added.
 
-CI validates the AppArmor policy with `apparmor_parser`, verifies the native-module, root-directory and PTY rules, smoke-tests `sqlite3` against an in-memory database, lists `/storage` in the built image and starts a real Bash process through NextExplorer's `node-pty` dependency.
+CI validates the AppArmor policy with `apparmor_parser`, verifies the native-module, root-directory and PTY rules, smoke-tests `sqlite3` against an in-memory database, lists `/storage` in the built image, verifies the terminal default-working-directory patch and starts a real Bash process through NextExplorer's `node-pty` dependency.
 
 ## Troubleshooting
 
-For app version 1.5.4, the startup log should include:
+For app version 1.5.5, the startup log should include:
 
-`NEXTEXPLORER HA INGRESS BUILD: 1.5.4`
+`NEXTEXPLORER HA INGRESS BUILD: 1.5.5`
 
 With the default configuration it should also show `AUTH_MODE: disabled` and the terminal enabled.
 
 Opening the volume list should show the configured roots without `EACCES: permission denied, scandir '/storage'`.
+
+Opening a new terminal should start at `/storage`. Run `pwd` to confirm and `ls` to list the exposed NextExplorer volumes. If the terminal instead starts elsewhere, make sure 1.5.5 is actually installed and restart the app.
 
 If the terminal UI opens but does not produce a prompt or accept commands, check the app log for AppArmor/PTY errors. Do not disable AppArmor as a workaround.
 
