@@ -4,6 +4,33 @@ All notable user-visible changes to the Home Assistant NextExplorer App are docu
 
 The Home Assistant App version is independent from the bundled NextExplorer upstream version.
 
+## [1.5.4] - 2026-09-10
+
+### Added
+
+- Added explicit Home Assistant support for NextExplorer's built-in terminal through the `terminal_enabled` option, enabled by default.
+- Added English and Dutch configuration descriptions for the terminal option.
+
+### Security
+
+- Added only the PTY device access required by `node-pty` (`/dev/ptmx`, `/dev/pts/**` and `/dev/tty`) to the restricted AppArmor child profile.
+- Terminal shells remain inside the same restricted AppArmor/container boundary and do not gain Home Assistant OS, Proxmox, Docker API or Supervisor administration access.
+
+### Validation
+
+- CI now verifies the required PTY AppArmor rules.
+- CI now launches a real Bash process through NextExplorer's `node-pty` dependency and verifies terminal output.
+- Both `amd64` and `aarch64` images and the signed multi-architecture `1.5.4` manifest were published successfully before the app version was advanced.
+
+### Documentation
+
+- Documented the intended terminal use for command-line file management in mapped Home Assistant directories and clearly distinguished it from a host shell.
+
+### Compatibility
+
+- Bundled NextExplorer remains `v2.2.7`.
+- No configuration migration is required from 1.5.3; `terminal_enabled` defaults to `true`.
+
 ## [1.5.3] - 2026-09-10
 
 ### Fixed
