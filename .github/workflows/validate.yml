@@ -22,9 +22,11 @@ jobs:
           sudo apt-get install -y apparmor apparmor-utils
           apparmor_parser -Q -K nextexplorer/apparmor.txt
 
-      - name: Verify native module AppArmor mapping permission
+      - name: Verify AppArmor runtime permissions
         run: |
           grep -Eq '^\s*/app/\*\*\s+mr,' nextexplorer/apparmor.txt
+          grep -Eq '^\s*/storage/\s+r,' nextexplorer/apparmor.txt
+          grep -Eq '^\s*/(homeassistant|share|media|backup)/\s+rw,' nextexplorer/apparmor.txt
 
       - name: Build app image
         run: |
@@ -38,3 +40,8 @@ jobs:
         run: |
           docker run --rm --entrypoint node ha-nextexplorer:test \
             -e "const sqlite3=require('sqlite3'); const db=new sqlite3.Database(':memory:'); db.close(); console.log('sqlite3 native module OK')"
+
+      - name: Smoke-test storage root listing
+        run: |
+          docker run --rm --entrypoint sh ha-nextexplorer:test -c \
+            "mkdir -p /storage/test-volume && node -e \"const fs=require('fs'); const entries=fs.readdirSync('/storage'); if(!entries.includes('test-volume')) process.exit(1); console.log('storage root listing OK')\""
