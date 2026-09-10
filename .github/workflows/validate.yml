@@ -22,6 +22,10 @@ jobs:
           sudo apt-get install -y apparmor apparmor-utils
           apparmor_parser -Q -K nextexplorer/apparmor.txt
 
+      - name: Verify native module AppArmor mapping permission
+        run: |
+          grep -Eq '^\s*/app/\*\*\s+mr,' nextexplorer/apparmor.txt
+
       - name: Build app image
         run: |
           docker build \
@@ -29,3 +33,8 @@ jobs:
             --build-arg BUILD_VERSION=ci \
             -t ha-nextexplorer:test \
             nextexplorer
+
+      - name: Smoke-test native Node modules
+        run: |
+          docker run --rm --entrypoint node ha-nextexplorer:test \
+            -e "const sqlite3=require('sqlite3'); const db=new sqlite3.Database(':memory:'); db.close(); console.log('sqlite3 native module OK')"
