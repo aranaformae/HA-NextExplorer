@@ -4,7 +4,7 @@ NextExplorer packaged as a Home Assistant App with native Ingress support.
 
 ## Current build
 
-- Home Assistant App: **1.5.4**
+- Home Assistant App: **1.5.5**
 - NextExplorer upstream: **v2.2.7**
 - Architectures: `amd64`, `aarch64`
 - Distribution: prebuilt signed multi-arch GHCR image
@@ -37,6 +37,8 @@ All selected mappings are read/write. `all_addon_configs`, `addons`, and `ssl` a
 
 App 1.5.4 explicitly supports NextExplorer's built-in Bash terminal. It is intended for command-line file management alongside the graphical interface, for example with `ls`, `find`, `grep`, `cp`, `mv` and `mkdir` in the mapped `/homeassistant`, `/share`, `/media` and `/backup` directories.
 
+App **1.5.5** changes the default terminal working directory to **`/storage`**. New terminal sessions therefore open directly at the NextExplorer volume root, so `pwd` reports `/storage` and `ls` works immediately. `/root` remains intentionally inaccessible.
+
 The terminal runs **inside the NextExplorer App container**. It is not a Home Assistant OS host shell or a Proxmox host shell and does not grant Docker API, Supervisor/host administration or unrestricted host access. Terminal child processes remain confined by the app's AppArmor/container security boundary. Use Home Assistant's dedicated Terminal & SSH tooling for host-level administration.
 
 The `terminal_enabled` option enables or disables the terminal backend and defaults to `true`.
@@ -57,9 +59,9 @@ Do not expose the internal NextExplorer service directly while authentication is
 
 The app does not use `SYS_ADMIN`, host networking, Docker API access, autofs or direct CIFS mounts. A custom `apparmor.txt` profile confines the Node.js service and terminal shells, and CI validates the profile syntax.
 
-App version 1.5.2 fixed native Node.js addon loading under AppArmor by allowing memory mapping for application files. App version 1.5.3 also allows reading/listing the `/storage/` root and mapped Home Assistant mount roots. App version 1.5.4 adds only the PTY device access required by the built-in terminal.
+App version 1.5.2 fixed native Node.js addon loading under AppArmor by allowing memory mapping for application files. App version 1.5.3 also allows reading/listing the `/storage/` root and mapped Home Assistant mount roots. App version 1.5.4 adds only the PTY device access required by the built-in terminal. App version 1.5.5 changes only the terminal's default working directory; AppArmor permissions remain unchanged.
 
-CI smoke-tests the bundled `sqlite3` native module, listing `/storage`, and a real Bash process launched through NextExplorer's `node-pty` dependency.
+CI smoke-tests the bundled `sqlite3` native module, listing `/storage`, verifies the terminal default-CWD patch, and launches a real Bash process through NextExplorer's `node-pty` dependency.
 
 Custom `env_vars` values are passed to NextExplorer but redacted from startup logs.
 
@@ -71,7 +73,7 @@ The app includes `icon.png`, `logo.png`, `DOCS.md`, `CHANGELOG.md`, and translat
 
 After startup the log should contain:
 
-`NEXTEXPLORER HA INGRESS BUILD: 1.5.4`
+`NEXTEXPLORER HA INGRESS BUILD: 1.5.5`
 
 and, with the default configuration:
 
@@ -79,6 +81,6 @@ and, with the default configuration:
 
 `TERMINAL_ENABLED: true`
 
-Opening the volume list should work without `EACCES: permission denied, scandir '/storage'`, and the built-in terminal should present a working prompt and accept commands within the mapped directories.
+Opening the volume list should work without `EACCES: permission denied, scandir '/storage'`. Opening a new built-in terminal should start at `/storage`, where `pwd` and `ls` work immediately.
 
 See `CHANGELOG.md` for release notes and migration information.
