@@ -22,6 +22,13 @@ configuration:
       Bepaalt de eigen authenticatie van NextExplorer. Disabled wordt
       aanbevolen bij normaal gebruik via Home Assistant Ingress, omdat Home
       Assistant de toegang tot de app al beveiligt.
+  terminal_enabled:
+    name: Ingebouwde terminal
+    description: >-
+      Schakelt de ingebouwde shellterminal van NextExplorer in. De terminal
+      draait binnen de appcontainer en kan bij de Home Assistant-mappen die
+      voor deze app zijn ingeschakeld. Schakel dit uit als je geen shelltoegang
+      nodig hebt.
   env_vars:
     name: Extra omgevingsvariabelen
     description: >-
