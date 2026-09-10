@@ -4,6 +4,23 @@ All notable user-visible changes to the Home Assistant NextExplorer App are docu
 
 The Home Assistant App version is independent from the bundled NextExplorer upstream version.
 
+## [1.5.3] - 2026-09-10
+
+### Fixed
+
+- Fixed `EACCES: permission denied, scandir '/storage'` caused by AppArmor allowing `/storage/**` but not the `/storage/` directory itself.
+- Added explicit read/list access to the `/storage/` root and the mapped Home Assistant mount roots (`/homeassistant/`, `/share/`, `/media/`, `/backup/`) while keeping recursive permissions restricted as before.
+
+### Validation
+
+- CI now asserts the required root-directory AppArmor rules.
+- CI now smoke-tests listing `/storage` in the built image in addition to the existing native `sqlite3` smoke test.
+
+### Compatibility
+
+- Bundled NextExplorer remains `v2.2.7`.
+- No configuration migration is required from 1.5.2.
+
 ## [1.5.2] - 2026-09-10
 
 ### Fixed

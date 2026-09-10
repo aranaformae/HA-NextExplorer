@@ -6,7 +6,7 @@ The goal is a modern file manager inside Home Assistant without exposing an extr
 
 ## Current release
 
-App **1.5.2** packages NextExplorer **v2.2.7** for `amd64` and `aarch64` using the signed multi-arch image `ghcr.io/aranaformae/ha-nextexplorer`.
+App **1.5.3** packages NextExplorer **v2.2.7** for `amd64` and `aarch64` using the signed multi-arch image `ghcr.io/aranaformae/ha-nextexplorer`.
 
 ## Features
 
@@ -19,7 +19,7 @@ App **1.5.2** packages NextExplorer **v2.2.7** for `amd64` and `aarch64` using t
 - Prebuilt signed multi-arch GHCR images
 - English and Dutch Home Assistant configuration translations
 - App Store `icon.png`, `logo.png`, `DOCS.md` and `CHANGELOG.md`
-- CI AppArmor/build validation, native-module smoke testing and upstream release monitoring
+- CI AppArmor/build validation, native-module and storage-root smoke testing, and upstream release monitoring
 
 ## Installation
 
@@ -48,9 +48,9 @@ For NAS storage, add SMB/NFS through **Settings → System → Storage → Add n
 
 `auth_mode: disabled` is the default because Home Assistant Ingress authenticates access before the app is reached. Do not expose the internal NextExplorer service directly in this mode.
 
-A custom `apparmor.txt` profile confines the Node.js service to required application/runtime paths, network traffic and mapped Home Assistant directories. App 1.5.2 allows memory mapping of application files so native Node.js addons such as `sqlite3` can load correctly without weakening the rest of the child profile.
+A custom `apparmor.txt` profile confines the Node.js service to required application/runtime paths, network traffic and mapped Home Assistant directories. App 1.5.2 added memory-mapping permission for native Node.js addons such as `sqlite3`; app 1.5.3 additionally grants explicit read/list access to the `/storage/` directory and mapped Home Assistant mount roots themselves so root-level browsing works under AppArmor.
 
-CI validates the AppArmor policy with `apparmor_parser`, checks the required mapping rule and smoke-tests `sqlite3` in the built image.
+CI validates the AppArmor policy with `apparmor_parser`, checks the required native-module and root-directory rules, smoke-tests `sqlite3`, and lists `/storage` in the built image.
 
 Advanced `env_vars` values are passed to NextExplorer but are redacted from startup logs.
 
@@ -70,11 +70,13 @@ Never reuse a released image tag for changed source. Build and verify the new im
 
 ## Verification
 
-A 1.5.2 startup should contain:
+A 1.5.3 startup should contain:
 
-`NEXTEXPLORER HA INGRESS BUILD: 1.5.2`
+`NEXTEXPLORER HA INGRESS BUILD: 1.5.3`
 
 and normally `AUTH_MODE: disabled`.
+
+Opening the volume list should show the configured roots without `EACCES: permission denied, scandir '/storage'`.
 
 See [CHANGELOG.md](CHANGELOG.md) for release notes.
 
