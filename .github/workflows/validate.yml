@@ -50,24 +50,27 @@ jobs:
 
       - name: Smoke-test built-in terminal PTY
         run: |
-          docker run --rm --entrypoint node ha-nextexplorer:test -e '
-            const pty = require("@homebridge/node-pty-prebuilt-multiarch");
-            const term = pty.spawn("bash", ["-lc", "printf terminal-pty-ok"], {
-              name: "xterm-256color",
-              cols: 80,
-              rows: 30,
-              cwd: "/storage",
-              env: { ...process.env, TERM: "xterm-256color" }
-            });
-            let output = "";
-            const timer = setTimeout(() => { console.error("PTY timeout"); term.kill(); process.exit(1); }, 10000);
-            term.onData(data => { output += data; });
-            term.onExit(({ exitCode }) => {
-              clearTimeout(timer);
-              if (exitCode !== 0 || !output.includes("terminal-pty-ok")) {
-                console.error({ exitCode, output });
-                process.exit(1);
-              }
-              console.log("terminal PTY OK");
-            });
+          docker run --rm --entrypoint sh ha-nextexplorer:test -c '
+            mkdir -p /storage &&
+            exec node -e '\''
+              const pty = require("@homebridge/node-pty-prebuilt-multiarch");
+              const term = pty.spawn("bash", ["-lc", "printf terminal-pty-ok"], {
+                name: "xterm-256color",
+                cols: 80,
+                rows: 30,
+                cwd: "/storage",
+                env: { ...process.env, TERM: "xterm-256color" }
+              });
+              let output = "";
+              const timer = setTimeout(() => { console.error("PTY timeout"); term.kill(); process.exit(1); }, 10000);
+              term.onData(data => { output += data; });
+              term.onExit(({ exitCode }) => {
+                clearTimeout(timer);
+                if (exitCode !== 0 || !output.includes("terminal-pty-ok")) {
+                  console.error({ exitCode, output });
+                  process.exit(1);
+                }
+                console.log("terminal PTY OK");
+              });
+            '\''
           '
