@@ -6,7 +6,7 @@ The goal is a modern file manager inside Home Assistant without exposing an extr
 
 ## Current release
 
-App **1.5.3** packages NextExplorer **v2.2.7** for `amd64` and `aarch64` using the signed multi-arch image `ghcr.io/aranaformae/ha-nextexplorer`.
+App **1.5.4** packages NextExplorer **v2.2.7** for `amd64` and `aarch64` using the signed multi-arch image `ghcr.io/aranaformae/ha-nextexplorer`.
 
 ## Features
 
