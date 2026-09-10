@@ -38,6 +38,11 @@ jobs:
             -t ha-nextexplorer:test \
             nextexplorer
 
+      - name: Verify terminal default working directory patch
+        run: |
+          docker run --rm --entrypoint sh ha-nextexplorer:test -c \
+            "grep -F 'const defaultCwd = process.env.VOLUME_ROOT || process.env.HOME || process.cwd();' /app/src/services/terminalService.js"
+
       - name: Smoke-test native Node modules
         run: |
           docker run --rm --entrypoint node ha-nextexplorer:test \
