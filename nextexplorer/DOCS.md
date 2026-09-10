@@ -67,13 +67,15 @@ The app does not require `SYS_ADMIN`, host networking, Docker API access, direct
 
 A custom `apparmor.txt` profile is included. The Node.js service runs in a restricted child profile with access to the application/runtime paths, cache/temp locations, network traffic required by Ingress and only the Home Assistant directories mapped by `config.yaml`.
 
-CI validates the AppArmor policy with `apparmor_parser` before building the image.
+Native Node.js addons such as `sqlite3` are shared objects loaded through `dlopen()`. From app version 1.5.2 the AppArmor child profile grants memory-mapping permission to application files so these modules can load while the rest of the profile remains restricted.
+
+CI validates the AppArmor policy with `apparmor_parser`, verifies the native-module mapping rule and smoke-tests `sqlite3` against an in-memory database in the built image.
 
 ## Troubleshooting
 
-For app version 1.5.1, the startup log should include:
+For app version 1.5.2, the startup log should include:
 
-`NEXTEXPLORER HA INGRESS BUILD: 1.5.1`
+`NEXTEXPLORER HA INGRESS BUILD: 1.5.2`
 
 With the default configuration it should also show `AUTH_MODE: disabled`.
 
