@@ -1,19 +1,16 @@
 name: Publish app image
 
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: App version to publish (for example 1.5.1)
-        required: true
-        type: string
+  push:
+    branches:
+      - release-1.5.2-apparmor-fix
 
 permissions: {}
 
 env:
   ARCHITECTURES: '["amd64", "aarch64"]'
   IMAGE_NAME: ha-nextexplorer
-  VERSION: ${{ inputs.version }}
+  VERSION: 1.5.2
 
 jobs:
   validate-version:
@@ -24,7 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Validate version input
+      - name: Validate version
         shell: bash
         run: |
           set -euo pipefail
@@ -43,7 +40,6 @@ jobs:
       matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
       - uses: actions/checkout@v4
-
       - name: Prepare build matrix
         id: matrix
         uses: home-assistant/builder/actions/prepare-multi-arch-matrix@4de35182ce1e329181bffcbcc84d33db5e2c7e10
@@ -64,7 +60,6 @@ jobs:
       matrix: ${{ fromJSON(needs.init.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
-
       - name: Build and publish image
         uses: home-assistant/builder/actions/build-image@4de35182ce1e329181bffcbcc84d33db5e2c7e10
         with:
