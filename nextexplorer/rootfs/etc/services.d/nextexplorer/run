@@ -1,20 +1,22 @@
 #!/usr/bin/with-contenv bashio
 
 echo "============================================================"
-echo "NEXTEXPLORER HA INGRESS BUILD: 1.5.3"
+echo "NEXTEXPLORER HA INGRESS BUILD: 1.5.4"
 echo "============================================================"
 echo "Starting Next Explorer server..."
 
 export LOG_LEVEL=$(bashio::config 'log_level' 'info')
 export PUBLIC_URL=$(bashio::config 'public_url' '')
 export AUTH_MODE=$(bashio::config 'auth_mode' 'disabled')
+export TERMINAL_ENABLED=$(bashio::config 'terminal_enabled' 'true')
 export TRUST_PROXY="loopback,uniquelocal"
 export USER_VOLUMES="true"
 
 echo "--- Runtime Configuration ---"
-echo "LOG_LEVEL:   $LOG_LEVEL"
-echo "AUTH_MODE:   $AUTH_MODE"
-echo "PUBLIC_URL:  $PUBLIC_URL"
+echo "LOG_LEVEL:         $LOG_LEVEL"
+echo "AUTH_MODE:         $AUTH_MODE"
+echo "TERMINAL_ENABLED:  $TERMINAL_ENABLED"
+echo "PUBLIC_URL:        $PUBLIC_URL"
 echo "----------------------------"
 
 for var in $(bashio::config 'env_vars|keys'); do

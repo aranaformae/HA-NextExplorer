@@ -6,7 +6,7 @@ The goal is a modern file manager inside Home Assistant without exposing an extr
 
 ## Current release
 
-App **1.5.3** packages NextExplorer **v2.2.7** for `amd64` and `aarch64` using the signed multi-arch image `ghcr.io/aranaformae/ha-nextexplorer`.
+App **1.5.4** packages NextExplorer **v2.2.7** for `amd64` and `aarch64` using the signed multi-arch image `ghcr.io/aranaformae/ha-nextexplorer`.
 
 ## Features
 
@@ -14,12 +14,13 @@ App **1.5.3** packages NextExplorer **v2.2.7** for `amd64` and `aarch64` using t
 - Home Assistant authentication as the default boundary
 - Configuration, share, media and backup file access
 - NextExplorer editor, previews, thumbnails and search
+- Built-in terminal for command-line file management inside the app container (1.5.4)
 - Custom AppArmor profile
 - No `SYS_ADMIN`, host networking, Docker API access, autofs or direct CIFS mounts
 - Prebuilt signed multi-arch GHCR images
 - English and Dutch Home Assistant configuration translations
 - App Store `icon.png`, `logo.png`, `DOCS.md` and `CHANGELOG.md`
-- CI AppArmor/build validation, native-module and storage-root smoke testing, and upstream release monitoring
+- CI AppArmor/build validation, native-module, storage-root and terminal PTY smoke testing
 
 ## Installation
 
@@ -44,13 +45,21 @@ Selectable `root_volumes` are restricted to:
 
 For NAS storage, add SMB/NFS through **Settings → System → Storage → Add network storage** and expose it through Home Assistant Share or Media storage.
 
+## Built-in terminal
+
+From app 1.5.4 the NextExplorer terminal is explicitly supported. It launches Bash through NextExplorer's PTY backend and is useful alongside the graphical file manager for commands such as `ls`, `find`, `grep`, `cp`, `mv` and `mkdir`, including searches and file operations in `/homeassistant`, `/share`, `/media` and `/backup`.
+
+**This is deliberately not a Home Assistant OS or Proxmox host shell.** The terminal runs inside the NextExplorer App container and remains confined by the same AppArmor/container security boundary. It does not provide Docker API access, Supervisor/host administration or unrestricted access to Home Assistant OS. Use Home Assistant's dedicated Terminal & SSH tooling for host-level administration.
+
+The Home Assistant option `terminal_enabled` can disable the terminal backend when it is not needed.
+
 ## Authentication and security
 
 `auth_mode: disabled` is the default because Home Assistant Ingress authenticates access before the app is reached. Do not expose the internal NextExplorer service directly in this mode.
 
-A custom `apparmor.txt` profile confines the Node.js service to required application/runtime paths, network traffic and mapped Home Assistant directories. App 1.5.2 added memory-mapping permission for native Node.js addons such as `sqlite3`; app 1.5.3 additionally grants explicit read/list access to the `/storage/` directory and mapped Home Assistant mount roots themselves so root-level browsing works under AppArmor.
+A custom `apparmor.txt` profile confines the Node.js service and terminal shells to required application/runtime paths, network traffic and mapped Home Assistant directories. App 1.5.2 added memory-mapping permission for native Node.js addons such as `sqlite3`; app 1.5.3 additionally grants explicit read/list access to the `/storage/` directory and mapped Home Assistant mount roots themselves. App 1.5.4 adds the PTY device permissions required for the built-in terminal without broadening it into a host shell.
 
-CI validates the AppArmor policy with `apparmor_parser`, checks the required native-module and root-directory rules, smoke-tests `sqlite3`, and lists `/storage` in the built image.
+CI validates the AppArmor policy with `apparmor_parser`, checks the required native-module, root-directory and PTY rules, smoke-tests `sqlite3`, lists `/storage`, and launches Bash through NextExplorer's `node-pty` dependency in the built image.
 
 Advanced `env_vars` values are passed to NextExplorer but are redacted from startup logs.
 
@@ -70,13 +79,7 @@ Never reuse a released image tag for changed source. Build and verify the new im
 
 ## Verification
 
-A 1.5.3 startup should contain:
-
-`NEXTEXPLORER HA INGRESS BUILD: 1.5.3`
-
-and normally `AUTH_MODE: disabled`.
-
-Opening the volume list should show the configured roots without `EACCES: permission denied, scandir '/storage'`.
+For 1.5.4, verify that the startup log contains `NEXTEXPLORER HA INGRESS BUILD: 1.5.4`, that configured volumes open normally, and that the built-in terminal presents a working prompt and can operate on the mapped directories.
 
 See [CHANGELOG.md](CHANGELOG.md) for release notes.
 

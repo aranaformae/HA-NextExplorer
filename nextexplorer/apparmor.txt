@@ -39,7 +39,7 @@ profile nextexplorer_ingress flags=(attach_disconnected,mediate_deleted) {
     network inet6,
     network unix,
 
-    # S6 may stop/restart the Node.js service.
+    # S6 may stop/restart the Node.js service and terminal child processes.
     signal (receive) peer=*_nextexplorer_ingress,
     signal (send) set=(kill,term,int,hup,cont),
 
@@ -72,6 +72,14 @@ profile nextexplorer_ingress flags=(attach_disconnected,mediate_deleted) {
     /media/** rwkl,
     /backup/ rw,
     /backup/** rwkl,
+
+    # PTY devices required by NextExplorer's built-in terminal. Shells and
+    # helpers inherit this restricted profile; no extra Linux capabilities are
+    # granted.
+    /dev/ptmx rw,
+    /dev/pts/ rw,
+    /dev/pts/** rw,
+    /dev/tty rw,
 
     # Basic process/system information required by Node.js and helper tools.
     /proc/** r,
