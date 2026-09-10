@@ -1,6 +1,9 @@
 name: Publish app image
 
 on:
+  push:
+    branches:
+      - release-1.5.3-storage-root
   workflow_dispatch:
     inputs:
       version:
@@ -13,7 +16,7 @@ permissions: {}
 env:
   ARCHITECTURES: '["amd64", "aarch64"]'
   IMAGE_NAME: ha-nextexplorer
-  VERSION: ${{ inputs.version }}
+  VERSION: ${{ github.event_name == 'push' && '1.5.3' || inputs.version }}
 
 jobs:
   validate-version:
