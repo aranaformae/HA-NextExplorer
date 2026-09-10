@@ -7,18 +7,13 @@ on:
         description: App version to publish (for example 1.5.1)
         required: true
         type: string
-  push:
-    branches:
-      - release/1.5.4-terminal
-    paths:
-      - .github/workflows/publish.yml
 
 permissions: {}
 
 env:
   ARCHITECTURES: '["amd64", "aarch64"]'
   IMAGE_NAME: ha-nextexplorer
-  VERSION: ${{ github.event_name == 'push' && '1.5.4' || inputs.version }}
+  VERSION: ${{ inputs.version }}
 
 jobs:
   validate-version:
