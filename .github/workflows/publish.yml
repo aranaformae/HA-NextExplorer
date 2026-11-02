@@ -1,6 +1,10 @@
 name: Publish app image
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'nextexplorer/config.yaml'
   workflow_dispatch:
     inputs:
       version:
@@ -13,7 +17,7 @@ permissions: {}
 env:
   ARCHITECTURES: '["amd64", "aarch64"]'
   IMAGE_NAME: ha-nextexplorer
-  VERSION: ${{ inputs.version }}
+  VERSION: ${{ inputs.version || '' }}
 
 jobs:
   validate-version:
@@ -29,6 +33,7 @@ jobs:
         run: |
           set -euo pipefail
           configured=$(sed -nE 's/^version: "([^"]+)"/\1/p' nextexplorer/config.yaml)
+          if [[ -z "${VERSION}" ]]; then echo "VERSION=$configured" >> "$GITHUB_ENV"; VERSION="$configured"; fi
           [[ "${VERSION}" == "$configured" ]] || { echo "::error::Version differs from config.yaml ($configured)"; exit 1; }
           if [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.-]+)?$ ]]; then
             echo "::error::Invalid version: ${VERSION}"
