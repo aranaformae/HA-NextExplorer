@@ -4,11 +4,21 @@ on:
   schedule:
     - cron: '17 7 * * *'
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Only inspect and report releases (no PRs or issues)'
+        type: boolean
+        default: true
+      include_preview:
+        description: 'Track prerelease versions'
+        type: boolean
+        default: true
+  pull_request:
+    paths:
+      - '.github/workflows/upstream-check.yml'
 
 permissions:
-  contents: write
-  pull-requests: write
-  issues: write
+  contents: read
 
 concurrency:
   group: upstream-release-check
@@ -28,7 +38,7 @@ jobs:
           set -euo pipefail
           pinned=$(sed -nE 's/.*git clone .*--branch (v[0-9]+\.[0-9]+\.[0-9]+).*/\1/p' nextexplorer/Dockerfile | head -n1)
           test -n "$pinned"
-          gh api repos/nxzai/NextExplorer/releases --paginate > "$RUNNER_TEMP/releases.json"
+          gh api 'repos/nxzai/NextExplorer/releases?per_page=100' > "$RUNNER_TEMP/releases.json"
           stable=$(jq -r '[.[] | select(.draft == false and .prerelease == false and (.tag_name | test("^v[0-9]+\\.[0-9]+\\.[0-9]+$")))] | first | .tag_name // empty' "$RUNNER_TEMP/releases.json")
           preview=$(jq -r '[.[] | select(.draft == false and .prerelease == true)] | first | .tag_name // empty' "$RUNNER_TEMP/releases.json")
           test -n "$stable"
@@ -36,8 +46,9 @@ jobs:
           echo "stable=$stable" >> "$GITHUB_OUTPUT"
           echo "preview=$preview" >> "$GITHUB_OUTPUT"
           echo "Pinned $pinned; stable $stable; preview $preview"
+          { echo '### Upstream release check'; echo "- Pinned: $pinned"; echo "- Stable: $stable"; echo "- Preview: ${preview:-none}"; echo "- Mode: ${{ github.event_name == 'schedule' && 'scheduled' || 'read-only dry run' }}"; } >> "$GITHUB_STEP_SUMMARY"
       - name: Create stable update pull request
-        if: steps.versions.outputs.pinned != steps.versions.outputs.stable
+        if: github.event_name == 'schedule' && steps.versions.outputs.pinned != steps.versions.outputs.stable
         env:
           GH_TOKEN: ${{ github.token }}
           PINNED: ${{ steps.versions.outputs.pinned }}
@@ -61,7 +72,7 @@ jobs:
             --title "chore: test NextExplorer ${STABLE} (stable)" \
             --body "Automated candidate from ${PINNED} to ${STABLE}. CI must pass. **Manual review required** for Ingress, AppArmor, authentication, persistence and runtime compatibility. This PR does not publish or deploy automatically."
       - name: Track preview release separately
-        if: steps.versions.outputs.preview != ''
+        if: github.event_name == 'schedule' && steps.versions.outputs.preview != ''
         env:
           GH_TOKEN: ${{ github.token }}
           PREVIEW: ${{ steps.versions.outputs.preview }}
