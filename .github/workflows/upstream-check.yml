@@ -67,12 +67,18 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git switch -c "$branch"
           sed -i "s/--branch ${PINNED} /--branch ${STABLE} /" nextexplorer/Dockerfile
-          git add nextexplorer/Dockerfile
+          current_version=$(sed -nE 's/^version: "([^"]+)"/\1/p' nextexplorer/config.yaml)
+          if [[ ! "$current_version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)(-.*)?$ ]]; then
+            echo "::error::Unsupported app version: $current_version"; exit 1
+          fi
+          next_version="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.$((BASH_REMATCH[3]+1))"
+          sed -i "s/^version: \"$current_version\"/version: \"$next_version\"/" nextexplorer/config.yaml
+          git add nextexplorer/Dockerfile nextexplorer/config.yaml
           git commit -m "chore: test upstream NextExplorer ${STABLE}"
           git push origin "$branch"
           gh pr create --base main --head "$branch" \
             --title "chore: test NextExplorer ${STABLE} (stable)" \
-            --body "Automated candidate from ${PINNED} to ${STABLE}. CI must pass. **Manual review required** for Ingress, AppArmor, authentication, persistence and runtime compatibility. This PR does not publish or deploy automatically."
+            --body "Automated candidate from ${PINNED} to ${STABLE}. CI must pass. Automatic publishing follows successful validation; failures require manual review."
       - name: Track preview release separately
         if: github.event_name == 'schedule' && steps.versions.outputs.preview != ''
         env:
