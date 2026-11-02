@@ -4,8 +4,8 @@ NextExplorer packaged as a Home Assistant App with native Ingress support.
 
 ## Current build
 
-- Home Assistant App: **1.5.5**
-- NextExplorer upstream: **v2.2.7**
+- Home Assistant App: **1.6.0**
+- NextExplorer upstream: **v4.0.1**
 - Architectures: `amd64`, `aarch64`
 - Distribution: prebuilt signed multi-arch GHCR image
 - Image: `ghcr.io/aranaformae/ha-nextexplorer`
@@ -18,7 +18,7 @@ NextExplorer packaged as a Home Assistant App with native Ingress support.
 
 This build adapts NextExplorer for the dynamic URL prefix used by Home Assistant Ingress. During the Docker build it applies compatibility changes for relative frontend assets, relative API calls, hash-based client-side routing and Ingress-safe branding paths.
 
-Home Assistant folders selected in `root_volumes` are exposed below NextExplorer's `/storage` volume root using controlled unprivileged symlinks. Volume discovery is patched to recognize those links.
+Home Assistant folders selected in `root_volumes` are exposed below NextExplorer's `/storage` volume root using controlled unprivileged symlinks. Volume discovery is patched to recognize those links. NextExplorer v4 path validation also explicitly permits resolved paths within the four mapped Home Assistant mount roots; unrelated symlink escapes remain blocked.
 
 The app uses Home Assistant's current object-style `map:` configuration and only requests the mounts it actually needs: `addon_config`, `homeassistant_config`, `share`, `media`, and `backup`.
 
@@ -61,7 +61,7 @@ The app does not use `SYS_ADMIN`, host networking, Docker API access, autofs or 
 
 App version 1.5.2 fixed native Node.js addon loading under AppArmor by allowing memory mapping for application files. App version 1.5.3 also allows reading/listing the `/storage/` root and mapped Home Assistant mount roots. App version 1.5.4 adds only the PTY device access required by the built-in terminal. App version 1.5.5 changes only the terminal's default working directory; AppArmor permissions remain unchanged.
 
-CI smoke-tests the bundled `sqlite3` native module, listing `/storage`, verifies the terminal default-CWD patch, and launches a real Bash process through NextExplorer's `node-pty` dependency.
+CI smoke-tests the bundled `better-sqlite3` native module, listing `/storage`, verifies the terminal default-CWD patch, and launches a real Bash process through NextExplorer's `node-pty` dependency.
 
 Custom `env_vars` values are passed to NextExplorer but redacted from startup logs.
 
@@ -73,7 +73,7 @@ The app includes `icon.png`, `logo.png`, `DOCS.md`, `CHANGELOG.md`, and translat
 
 After startup the log should contain:
 
-`NEXTEXPLORER HA INGRESS BUILD: 1.5.5`
+`NEXTEXPLORER HA INGRESS BUILD: 1.6.0`
 
 and, with the default configuration:
 

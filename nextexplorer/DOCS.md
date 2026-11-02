@@ -108,15 +108,15 @@ CI validates the AppArmor policy with `apparmor_parser`, verifies the native-mod
 
 ## Troubleshooting
 
-For app version 1.5.5, the startup log should include:
+For app version 1.6.0, the startup log should include:
 
-`NEXTEXPLORER HA INGRESS BUILD: 1.5.5`
+`NEXTEXPLORER HA INGRESS BUILD: 1.6.0`
 
 With the default configuration it should also show `AUTH_MODE: disabled` and the terminal enabled.
 
 Opening the volume list should show the configured roots without `EACCES: permission denied, scandir '/storage'`.
 
-Opening a new terminal should start at `/storage`. Run `pwd` to confirm and `ls` to list the exposed NextExplorer volumes. If the terminal instead starts elsewhere, make sure 1.5.5 is actually installed and restart the app.
+Opening a new terminal should start at `/storage`. Run `pwd` to confirm and `ls` to list the exposed NextExplorer volumes. If the terminal instead starts elsewhere, make sure 1.6.0 is actually installed and restart the app.
 
 If the terminal UI opens but does not produce a prompt or accept commands, check the app log for AppArmor/PTY errors. Do not disable AppArmor as a workaround.
 
@@ -126,6 +126,6 @@ If the app fails to start after an AppArmor change, inspect the Home Assistant h
 
 ## Updates
 
-NextExplorer is pinned to a tested upstream release instead of following `latest`. New app versions are published only after compatibility patches, CI validation and both architecture images have been verified.
+NextExplorer is pinned to a tested upstream release instead of following `latest`. New stable upstream versions are checked daily. A candidate pull request receives a new app version and a full CI build; if the explicitly dispatched validation succeeds, GitHub Actions merges the candidate and triggers multi-architecture publication. If validation fails, the PR remains open. Publication on a change to `config.yaml` in `main` is automatic. Confirm the publish workflow succeeds before updating Home Assistant. Build checks cannot replace manual runtime testing of file operations, Ingress and permissions.
 
 See the changelog for detailed release notes and migration information.

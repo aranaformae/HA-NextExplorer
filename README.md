@@ -6,7 +6,7 @@ The goal is a modern file manager inside Home Assistant without exposing an extr
 
 ## Current release
 
-App **1.5.5** packages NextExplorer **v2.2.7** for `amd64` and `aarch64` using the signed multi-arch image `ghcr.io/aranaformae/ha-nextexplorer`.
+App **1.6.0** packages NextExplorer **v4.0.1** for `amd64` and `aarch64` using the multi-arch image `ghcr.io/aranaformae/ha-nextexplorer`.
 
 ## Features
 
@@ -71,17 +71,17 @@ The app folder follows the current Home Assistant layout with `config.yaml`, `Do
 
 ## Ingress compatibility patches
 
-The build patches upstream NextExplorer so Vite assets and API calls use relative paths, Vue Router uses hash history, branding paths remain Ingress-safe, volume discovery accepts the controlled symlinks created by the app, and terminal sessions default to the app's volume root.
+The build patches upstream NextExplorer v4.0.1 so Vite assets and API calls use relative paths, Vue Router uses hash history, branding paths remain Ingress-safe, volume discovery accepts the controlled symlinks created by the app, and terminal sessions default to the app's volume root. Path validation explicitly permits resolved paths only within the four mounted Home Assistant directories (`/homeassistant`, `/share`, `/media`, `/backup`) in addition to `/storage`; other escapes remain blocked.
 
 ## Publishing
 
 GitHub Actions builds native `amd64` and `aarch64` images and combines them into the generic multi-arch GHCR manifest. Published images are signed through the Home Assistant builder/Cosign OIDC flow.
 
-Never reuse a released image tag for changed source. Build and verify the new image before merging the matching `config.yaml` version into `main`.
+The publish workflow runs automatically when `nextexplorer/config.yaml` changes on `main`, and can also be started manually. It builds and publishes both architectures; verify the workflow succeeded before installing. Never reuse a published image tag for changed source.\n\nA daily scheduled upstream check proposes a new stable NextExplorer release in a pull request with an incremented app version. An explicitly dispatched validation run must succeed for the exact candidate commit before automatic merging and publishing. Failed validation leaves the PR open. Preview releases are tracked separately. This is build validation, not a full Home Assistant runtime test; upstream changes may require patch adjustments.
 
 ## Verification
 
-For 1.5.5, verify that the startup log contains `NEXTEXPLORER HA INGRESS BUILD: 1.5.5`, that configured volumes open normally, and that a new built-in terminal opens in `/storage` so `pwd` returns `/storage` and `ls` works immediately.
+For 1.6.0, verify that the startup log contains `NEXTEXPLORER HA INGRESS BUILD: 1.6.0`, that configured volumes open normally, and that a new built-in terminal opens in `/storage` so `pwd` returns `/storage` and `ls` works immediately.
 
 See [CHANGELOG.md](CHANGELOG.md) for release notes.
 

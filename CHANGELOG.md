@@ -4,6 +4,22 @@ All notable user-visible changes to the Home Assistant NextExplorer App are docu
 
 The Home Assistant App version is independent from the bundled NextExplorer upstream version.
 
+## [1.6.0] - 2026-11-02
+
+### Changed
+- Updated bundled NextExplorer from v2.2.7 to v4.0.1, including Ingress compatibility patches.
+- Promoted the tested 1.6.0-beta.2 integration to stable 1.6.0.
+- Enabled automatic multi-architecture image publishing on Home Assistant App version changes to main.
+- Added daily upstream stable release detection, candidate PR creation, CI-gated automatic merge and publication. Prereleases are tracked separately.
+
+### Fixed
+- Restored access to Home Assistant configuration, share, media and backup volumes under NextExplorer v4 by allowing the four explicitly mapped paths through upstream realpath validation.
+- Other realpath escapes remain rejected.
+
+### Validation
+- AppArmor, native-module, storage-root, terminal and Docker build checks pass. Home Assistant volume browsing and opening files were confirmed with 1.6.0-beta.2.
+- Write operations and the complete automatic upstream-update chain have not yet been verified end-to-end.
+
 ## [1.5.5] - 2026-09-10
 
 ### Fixed
