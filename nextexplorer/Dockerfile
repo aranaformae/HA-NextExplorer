@@ -1,5 +1,5 @@
 FROM ghcr.io/home-assistant/base:latest AS fetch_source
-RUN apk add --no-cache git python3
+RUN apk add --no-cache git
 WORKDIR /ne_src
 RUN git clone --depth 1 --branch v4.0.1 https://github.com/nxzai/NextExplorer .
 
@@ -10,7 +10,7 @@ RUN sed -i "/export default defineConfig({/a\\  base: './'," frontend/vite.confi
  && find frontend/src backend/src -type f \( -name '*.js' -o -name '*.vue' \) -exec sed -i "s#'/logo.svg'#'./logo.svg'#g" {} + \
  && sed -i "s#\.filter((entry) => entry.isDirectory())#.filter((entry) => entry.isDirectory() || entry.isSymbolicLink())#" backend/src/routes/volumes.js \
  && sed -i "s#const defaultCwd = process.env.HOME || process.cwd();#const defaultCwd = process.env.VOLUME_ROOT || process.env.HOME || process.cwd();#" backend/src/services/terminalService.js \
- && python3 -c 'from pathlib import Path; p=Path('backend/src/utils/pathUtils.js'); s=p.read_text(); old='  const contained = (candidate) => candidate === expectedRoot || candidate.startsWith(realWithSep);'; new='  const haMounts = ["/homeassistant", "/share", "/media", "/backup"];\n  const contained = (candidate) => candidate === expectedRoot || candidate.startsWith(realWithSep) || (root === directories.volume && haMounts.some((mount) => candidate === mount || candidate.startsWith(mount + path.sep)));'; assert s.count(old) == 1; p.write_text(s.replace(old,new))'
+ && sed -i "s#const contained = (candidate) => candidate === expectedRoot || candidate.startsWith(realWithSep);#const contained = (candidate) => candidate === expectedRoot || candidate.startsWith(realWithSep) || (root === directories.volume \&\& [\x27/homeassistant\x27, \x27/share\x27, \x27/media\x27, \x27/backup\x27].some(mount => candidate === mount || candidate.startsWith(mount + path.sep)));#" backend/src/utils/pathUtils.js
 
 FROM ghcr.io/home-assistant/base:latest AS base
 WORKDIR /app
