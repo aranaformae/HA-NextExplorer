@@ -21,6 +21,7 @@ permissions:
   contents: write
   pull-requests: write
   issues: write
+  actions: write
 
 concurrency:
   group: upstream-release-check
@@ -79,6 +80,7 @@ jobs:
           gh pr create --base main --head "$branch" \
             --title "chore: test NextExplorer ${STABLE} (stable)" \
             --body "Automated candidate from ${PINNED} to ${STABLE}. CI must pass. Automatic publishing follows successful validation; failures require manual review."
+          gh workflow run validate.yml --ref "$branch"
       - name: Track preview release separately
         if: github.event_name == 'schedule' && steps.versions.outputs.preview != ''
         env:
