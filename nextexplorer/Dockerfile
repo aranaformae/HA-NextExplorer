@@ -10,7 +10,7 @@ RUN sed -i "/export default defineConfig({/a\\  base: './'," frontend/vite.confi
  && find frontend/src backend/src -type f \( -name '*.js' -o -name '*.vue' \) -exec sed -i "s#'/logo.svg'#'./logo.svg'#g" {} + \
  && sed -i "s#\.filter((entry) => entry.isDirectory())#.filter((entry) => entry.isDirectory() || entry.isSymbolicLink())#" backend/src/routes/volumes.js \
  && sed -i "s#const defaultCwd = process.env.HOME || process.cwd();#const defaultCwd = process.env.VOLUME_ROOT || process.env.HOME || process.cwd();#" backend/src/services/terminalService.js \
- && sed -i "s#const contained = (candidate) => candidate === expectedRoot || candidate.startsWith(realWithSep);#const contained = (candidate) => candidate === expectedRoot || candidate.startsWith(realWithSep) || (root === directories.volume \&\& [\x27/homeassistant\x27, \x27/share\x27, \x27/media\x27, \x27/backup\x27].some(mount => candidate === mount || candidate.startsWith(mount + path.sep)));#" backend/src/utils/pathUtils.js
+ && sed -i "s#const contained = (candidate) => candidate === expectedRoot || candidate.startsWith(realWithSep);#const contained = (candidate) => candidate === expectedRoot || candidate.startsWith(realWithSep) || (root === directories.volume \&\& ['/homeassistant', '/share', '/media', '/backup'].some(mount => candidate === mount || candidate.startsWith(mount + path.sep)));#" backend/src/utils/pathUtils.js
 
 FROM ghcr.io/home-assistant/base:latest AS base
 WORKDIR /app
