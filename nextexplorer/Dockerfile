@@ -9,7 +9,24 @@ RUN sed -i "/export default defineConfig({/a\\  base: './'," frontend/vite.confi
  && sed -i "s#history: createWebHistory(import.meta.env.BASE_URL),#history: createWebHashHistory(),#" frontend/src/router/index.js \
  && find frontend/src backend/src -type f \( -name '*.js' -o -name '*.vue' \) -exec sed -i "s#'/logo.svg'#'./logo.svg'#g" {} + \
  && sed -i "s#\.filter((entry) => entry.isDirectory())#.filter((entry) => entry.isDirectory() || entry.isSymbolicLink())#" backend/src/routes/volumes.js \
- && sed -i "s#const defaultCwd = process.env.HOME || process.cwd();#const defaultCwd = process.env.VOLUME_ROOT || process.env.HOME || process.cwd();#" backend/src/services/terminalService.js
+ && sed -i "s#const defaultCwd = process.env.HOME || process.cwd();#const defaultCwd = process.env.VOLUME_ROOT || process.env.HOME || process.cwd();#" backend/src/services/terminalService.js \
+ && python3 - <<'PY'
+from pathlib import Path
+p = Path('backend/src/utils/pathUtils.js')
+s = p.read_text()
+old = "  const contained = (candidate) => candidate === expectedRoot || candidate.startsWith(realWithSep);"
+new = '''  // Home Assistant maps these four directories into the app. Only allow realpaths
+  // under these explicit mounts when resolving paths from /storage.
+  const haMounts = ['/homeassistant', '/share', '/media', '/backup'];
+  const contained = (candidate) =>
+    candidate === expectedRoot || candidate.startsWith(realWithSep) ||
+    (root === directories.volume && haMounts.some((mount) =>
+      candidate === mount || candidate.startsWith(`${mount}${path.sep}`)));
+'''.rstrip()
+if s.count(old) != 1:
+    raise SystemExit('Unexpected upstream pathUtils.js layout')
+p.write_text(s.replace(old, new))
+PY
 
 FROM ghcr.io/home-assistant/base:latest AS base
 WORKDIR /app
