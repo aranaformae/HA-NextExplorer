@@ -48,8 +48,16 @@ jobs:
       contents: read
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
+      version: ${{ steps.release.outputs.version }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Resolve release version
+        id: release
+        shell: bash
+        run: |
+          configured=$(sed -nE 's/^version: "([^"]+)"/\1/p' nextexplorer/config.yaml)
+          echo "version=$configured" >> "$GITHUB_OUTPUT"
 
       - name: Prepare build matrix
         id: matrix
@@ -80,7 +88,7 @@ jobs:
           context: nextexplorer
           image: ${{ matrix.image }}
           image-tags: |
-            ${{ env.VERSION }}
+            ${{ needs.init.outputs.version }}
           push: 'true'
           version: ${{ env.VERSION }}
 
@@ -99,4 +107,4 @@ jobs:
           container-registry-password: ${{ secrets.GITHUB_TOKEN }}
           image-name: ${{ env.IMAGE_NAME }}
           image-tags: |
-            ${{ env.VERSION }}
+            ${{ needs.init.outputs.version }}
