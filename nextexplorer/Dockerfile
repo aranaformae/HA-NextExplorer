@@ -1,7 +1,7 @@
 FROM ghcr.io/home-assistant/base:latest AS fetch_source
 RUN apk add --no-cache git
 WORKDIR /ne_src
-RUN git clone --depth 1 --branch v2.2.7 https://github.com/nxzai/NextExplorer .
+RUN git clone --depth 1 --branch v3.1.0 https://github.com/nxzai/NextExplorer .
 
 RUN sed -i "/export default defineConfig({/a\\  base: './'," frontend/vite.config.js \
  && sed -i "s#const DEFAULT_API_BASE = '/';#const DEFAULT_API_BASE = '.';#" frontend/src/api/http.js \
