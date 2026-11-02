@@ -1,49 +1,75 @@
-name: Check upstream NextExplorer release
+name: Check upstream NextExplorer releases
 
 on:
   schedule:
-    - cron: '17 7 * * 1'
+    - cron: '17 7 * * *'
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
+  pull-requests: write
   issues: write
+
+concurrency:
+  group: upstream-release-check
+  cancel-in-progress: false
 
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Compare pinned and latest versions
+      - uses: actions/checkout@v4
+      - name: Compare stable and preview releases
         id: versions
+        env:
+          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
-          pinned=$(grep -oE -- '--branch v[0-9]+\.[0-9]+\.[0-9]+' nextexplorer/Dockerfile | awk '{print $2}' | head -n1)
-          latest=$(curl -fsSL https://api.github.com/repos/nxzai/NextExplorer/releases/latest | jq -r '.tag_name')
+          pinned=$(sed -nE 's/.*git clone .*--branch (v[0-9]+\.[0-9]+\.[0-9]+).*/\1/p' nextexplorer/Dockerfile | head -n1)
+          test -n "$pinned"
+          gh api repos/nxzai/NextExplorer/releases --paginate > "$RUNNER_TEMP/releases.json"
+          stable=$(jq -r '[.[] | select(.draft == false and .prerelease == false and (.tag_name | test("^v[0-9]+\\.[0-9]+\\.[0-9]+$")))] | first | .tag_name // empty' "$RUNNER_TEMP/releases.json")
+          preview=$(jq -r '[.[] | select(.draft == false and .prerelease == true)] | first | .tag_name // empty' "$RUNNER_TEMP/releases.json")
+          test -n "$stable"
           echo "pinned=$pinned" >> "$GITHUB_OUTPUT"
-          echo "latest=$latest" >> "$GITHUB_OUTPUT"
-          if [ "$pinned" != "$latest" ]; then
-            echo "update_available=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "update_available=false" >> "$GITHUB_OUTPUT"
-          fi
-          echo "Pinned: $pinned"
-          echo "Latest: $latest"
-
-      - name: Open update issue if needed
-        if: steps.versions.outputs.update_available == 'true'
+          echo "stable=$stable" >> "$GITHUB_OUTPUT"
+          echo "preview=$preview" >> "$GITHUB_OUTPUT"
+          echo "Pinned $pinned; stable $stable; preview $preview"
+      - name: Create stable update pull request
+        if: steps.versions.outputs.pinned != steps.versions.outputs.stable
         env:
           GH_TOKEN: ${{ github.token }}
           PINNED: ${{ steps.versions.outputs.pinned }}
-          LATEST: ${{ steps.versions.outputs.latest }}
+          STABLE: ${{ steps.versions.outputs.stable }}
+        shell: bash
         run: |
-          title="Update NextExplorer to ${LATEST}"
-          existing=$(gh issue list --state open --search "$title in:title" --json number --jq 'length')
-          if [ "$existing" -eq 0 ]; then
-            gh issue create \
-              --title "$title" \
-              --body "Upstream NextExplorer has a newer release.\n\nPinned: **${PINNED}**\nLatest: **${LATEST}**\n\nReview the Ingress patches and CI build before updating the pin."
+          set -euo pipefail
+          branch="automation/nextexplorer-${STABLE}"
+          if gh api "repos/${GITHUB_REPOSITORY}/branches/${branch}" >/dev/null 2>&1; then
+            echo "Branch already exists; avoiding overwriting human changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          sed -i "s/--branch ${PINNED} /--branch ${STABLE} /" nextexplorer/Dockerfile
+          git add nextexplorer/Dockerfile
+          git commit -m "chore: test upstream NextExplorer ${STABLE}"
+          git push origin "$branch"
+          gh pr create --base main --head "$branch" \
+            --title "chore: test NextExplorer ${STABLE} (stable)" \
+            --body "Automated candidate from ${PINNED} to ${STABLE}. CI must pass. **Manual review required** for Ingress, AppArmor, authentication, persistence and runtime compatibility. This PR does not publish or deploy automatically."
+      - name: Track preview release separately
+        if: steps.versions.outputs.preview != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PREVIEW: ${{ steps.versions.outputs.preview }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          title="Evaluate NextExplorer ${PREVIEW} prerelease"
+          if ! gh issue list --state all --search "\"$title\" in:title" --json title --jq '.[].title' | grep -Fxq "$title"; then
+            gh issue create --title "$title" \
+              --body "Prerelease ${PREVIEW} detected. Evaluate on an isolated branch/image; do not automatically promote to the stable Home Assistant channel. Verify Node runtime, Ingress, auth, mounts, terminal, AppArmor, data migration and rollback."
           fi
