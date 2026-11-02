@@ -1,0 +1,41 @@
+name: Auto-promote validated NextExplorer updates
+
+on:
+  workflow_run:
+    workflows: ["Validate app build"]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+concurrency:
+  group: nextexplorer-auto-promote
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    if: ${{ github.event.workflow_run.event == 'workflow_dispatch' && github.event.workflow_run.conclusion == 'success' && startsWith(github.event.workflow_run.head_branch, 'automation/nextexplorer-v') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify exact candidate and publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+          RUN_BRANCH: ${{ github.event.workflow_run.head_branch }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          pr=$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --head "$RUN_BRANCH" --json number,headRefOid,baseRefName,isDraft --jq '.[] | select(.baseRefName == "main" and .isDraft == false) | .number' | head -1)
+          if [[ -z "$pr" ]]; then echo "No eligible PR"; exit 0; fi
+          head=$(gh pr view "$pr" --repo "$GITHUB_REPOSITORY" --json headRefOid --jq .headRefOid)
+          [[ "$head" == "$RUN_SHA" ]] || { echo "::error::PR head changed"; exit 1; }
+          mapfile -t files < <(gh api "repos/$GITHUB_REPOSITORY/pulls/$pr/files" --paginate --jq '.[].filename' | sort)
+          [[ "${#files[@]}" -eq 2 && "${files[0]}" == "nextexplorer/Dockerfile" && "${files[1]}" == "nextexplorer/config.yaml" ]] || { echo "::error::Unexpected PR files"; exit 1; }
+          gh api "repos/$GITHUB_REPOSITORY/contents/nextexplorer/config.yaml?ref=$RUN_SHA" --jq .content | base64 -d > config.yaml
+          version=$(sed -nE 's/^version: "([^"]+)"/\1/p' config.yaml)
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::Invalid release version"; exit 1; }
+          gh pr merge "$pr" --repo "$GITHUB_REPOSITORY" --squash --match-head-commit "$RUN_SHA"
+          gh workflow run publish.yml --repo "$GITHUB_REPOSITORY" --ref main -f version="$version"
+          echo "Merged PR #$pr and dispatched publication for $version" >> "$GITHUB_STEP_SUMMARY"
