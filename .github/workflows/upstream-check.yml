@@ -18,7 +18,9 @@ on:
       - '.github/workflows/upstream-check.yml'
 
 permissions:
-  contents: read
+  contents: write
+  pull-requests: write
+  issues: write
 
 concurrency:
   group: upstream-release-check
