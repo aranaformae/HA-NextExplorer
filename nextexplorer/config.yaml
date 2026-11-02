@@ -1,6 +1,6 @@
 ---
 name: Next Explorer Ingress
-version: "1.6.0-beta.1"
+version: "1.6.0-beta.2"
 slug: nextexplorer_ingress
 description: Next Explorer patched for native Home Assistant Ingress
 url: "https://github.com/aranaformae/HA-NextExplorer"
