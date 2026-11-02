@@ -46,7 +46,7 @@ jobs:
       - name: Smoke-test native Node modules
         run: |
           docker run --rm --entrypoint node ha-nextexplorer:test \
-            -e "const sqlite3=require('sqlite3'); const db=new sqlite3.Database(':memory:'); db.close(); console.log('sqlite3 native module OK')"
+            -e 'const fs=require("fs"); const p=JSON.parse(fs.readFileSync("/app/node_modules/better-sqlite3/package.json","utf8")); const Database=require("better-sqlite3"); const db=new Database(":memory:"); db.exec("CREATE TABLE smoke (id INTEGER)"); db.close(); console.log("better-sqlite3 native module OK",p.version)'
 
       - name: Smoke-test storage root listing
         run: |
